@@ -28,4 +28,4 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
-Sitemap: https://every1ate.netlify.app/sitemap.xml
+Sitemap: https://every1ate.com/sitemap.xml

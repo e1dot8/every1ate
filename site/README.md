@@ -37,7 +37,7 @@ Envoi via Formspree (`https://formspree.io/f/mjyvnlvd`), inchangé.
 - `assets/web/` : logos optimisés (WebP), icônes, image de partage `og-image.jpg`.
 
 **Le jour où le domaine every1ate.com est branché sur Netlify**, remplacer
-`https://every1ate.netlify.app` par `https://every1ate.com` dans :
+`https://every1ate.com` par `https://every1ate.com` dans :
 `index.html`, `mentions-legales.html`, `robots.txt`, `sitemap.xml`, `llms.txt`.
 
 ## Mentions légales
