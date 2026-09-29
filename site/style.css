@@ -3959,11 +3959,6 @@ html.egg-open .float-cta.is-visible {
     --sec-gap: 88px;
   }
 
-  /* Vidéo adoucie : le blanc n'agresse plus les yeux */
-  .hero-video {
-    filter: brightness(.68);
-  }
-
   .m-typo,
   .m-icon {
     will-change: transform, opacity;
@@ -4138,6 +4133,279 @@ html.egg-open .float-cta.is-visible {
   /* la méthode passe juste après la carte */
   .method {
     z-index: 4;
+  }
+}
+
+
+/* =========================================================
+   V3 — titres homogènes, hero plus convertissant, footer
+   ========================================================= */
+
+/* --- Tous les titres de section à la même taille --- */
+.sec-label,
+.details-wrap .sec-label {
+  padding-top: 0;
+  font-size: clamp(19px, 1.65vw, 28px);
+  letter-spacing: -.01em;
+}
+
+/* --- Hero (desktop) : le CTA rejoint le statement ---
+   L'œil lit : logo (centre) → statement → bouton, sans traverser l'écran */
+@media (min-width: 481px) {
+  .hero-say {
+    bottom: calc(clamp(50px, 4vw, 70px) + clamp(17px, 1.6vw, 26px) * 2.4 + 22px);
+  }
+
+  .hero-cta {
+    left: var(--gutter);
+    right: auto;
+    padding: .72em 1.05em .68em;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-cta .i-arrow {
+    animation: e1-nudge-diag 4s var(--ease) 2.5s infinite;
+  }
+}
+
+@keyframes e1-nudge-diag {
+  0%, 84%, 100% { transform: none; }
+  90%           { transform: translate(3px, -3px); }
+}
+
+/* --- Brigade : survol = zoom + petite rotation (on devine le clic) --- */
+.member-photo {
+  cursor: pointer;
+}
+
+.member-photo .face {
+  transition: transform 420ms var(--ease);
+}
+
+.member-photo:hover .face,
+.member-photo:focus-visible .face {
+  transform: translateX(-50%) scale(1.07) rotate(-2.5deg);
+}
+
+.member:nth-child(2) .member-photo:hover .face {
+  transform: translateX(-50%) scale(1.07) rotate(2deg);
+}
+
+/* --- Expertises (desktop) : la colonne glisse et écrase l'approche --- */
+@media (min-width: 901px) {
+  .details-wrap {
+    --g: clamp(40px, 5vw, 96px);
+    column-gap: var(--g);
+    transition: grid-template-columns 650ms var(--ease);
+  }
+
+  .details-wrap.xp-focus {
+    grid-template-columns: minmax(0, 11fr) minmax(0, 37fr) minmax(0, 53fr);
+  }
+
+  /* le texte de l'approche garde sa largeur : il se fait rogner, pas tasser */
+  .details-wrap #approche {
+    overflow: hidden;
+    transition: opacity 500ms ease;
+  }
+
+  .details-wrap #approche > * {
+    width: calc((100vw - 2 * var(--gutter) - 2 * var(--g)) * 27 / 101 - 12px);
+  }
+
+  .details-wrap.xp-focus #approche {
+    opacity: .25;
+  }
+}
+
+/* --- Méthode : progression + chiffre qui « tombe » à sa place --- */
+.method-steps {
+  position: relative;
+}
+
+.method-progress {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--black);
+  transform: scaleX(var(--mp, .2));
+  transform-origin: 0 50%;
+  transition: transform 500ms var(--ease);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .step.is-active .step-n {
+    animation: e1-drop 520ms var(--ease);
+  }
+
+  .step.is-active .step-pro,
+  .step.is-active .step-text {
+    animation: e1-rise 520ms var(--ease) both;
+  }
+
+  .step.is-active .step-text {
+    animation-delay: 90ms;
+  }
+}
+
+@keyframes e1-drop {
+  0%   { transform: translateY(-.25em); opacity: .2; }
+  100% { transform: none; opacity: 1; }
+}
+
+@keyframes e1-rise {
+  0%   { transform: translateY(10px); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+
+@media (max-width: 900px) {
+  .method-progress {
+    display: none;
+  }
+}
+
+/* --- Footer : le contact d'abord ; l'icône à droite du titre --- */
+.footer-cta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+}
+
+.footer-icon {
+  flex: none;
+  line-height: 0;
+}
+
+.footer-icon img {
+  width: clamp(80px, 8.5vw, 150px);
+  height: auto;
+  transition: transform var(--t-base) var(--ease);
+}
+
+.footer-icon:hover img {
+  transform: rotate(-6deg) scale(1.04);
+}
+
+.footer-mark {
+  display: none;
+}
+
+.footer-address {
+  font-family: var(--font-text);
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.footer .e1-marquee {
+  padding: 18px 0 max(22px, env(safe-area-inset-bottom));
+}
+
+@media (min-width: 481px) {
+  .footer-main {
+    padding-bottom: 8px;
+  }
+
+  .footer-address br {
+    display: none;
+  }
+}
+
+/* =========================================================
+   V3 — mobile : 1 section = 1 écran, footer façon Yard
+   ========================================================= */
+
+@media (max-width: 480px) {
+  .sec-label,
+  .details-wrap .sec-label {
+    font-size: 24px;
+  }
+
+  /* chaque section occupe un écran, contenu centré */
+  .card-details,
+  .sec-brigade {
+    min-height: 100svh;
+    align-content: center;
+    padding-top: 64px;
+    padding-bottom: 64px;
+  }
+
+  /* brigade compacte : les 3 chefs tiennent sur un écran */
+  .sec-brigade .member {
+    grid-template-columns: minmax(0, 30%) minmax(0, 1fr);
+    padding: 7px 0;
+  }
+
+  .sec-brigade .member-insta,
+  .sec-brigade .member-more {
+    display: none;
+  }
+
+  .sec-brigade .member-name {
+    font-size: 16px;
+  }
+
+  .sec-brigade .member-aka {
+    margin-top: 4px;
+    font-size: 11px;
+  }
+
+  .sec-brigade .member-role {
+    margin-top: 10px;
+  }
+
+  /* footer façon Yard : titre, signature géante, infos, bandeau */
+  .footer-cta {
+    padding: 72px var(--gutter) 28px;
+  }
+
+  .footer-title {
+    font-size: clamp(34px, 10vw, 44px);
+  }
+
+  .footer-icon img {
+    width: 64px;
+  }
+
+  .footer-mark {
+    display: block;
+    padding: 12px var(--gutter) 22px;
+    line-height: 0;
+  }
+
+  .footer-mark img {
+    width: 100%;
+    height: auto;
+  }
+
+  .footer-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px 20px;
+    padding: 0 var(--gutter) 18px;
+    color: var(--white);
+    font-size: 13px;
+  }
+
+  .footer-links {
+    flex-direction: column;
+    gap: 6px;
+    text-align: right;
+  }
+
+  .footer-meta {
+    grid-column: 1 / -1;
+    opacity: .55;
+    font-size: 11px;
+  }
+
+  .footer .e1-marquee-text {
+    font-size: 34px;
+    color: var(--white);
   }
 }
 

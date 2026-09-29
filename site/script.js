@@ -682,19 +682,46 @@
   var bellRings = 0;
   var audioCtx = null;
 
+  // Sonnette de comptoir (« service bell ») synthétisée : un coup sec
+  // (bruit filtré) + des partiels métalliques non harmoniques qui
+  // vibrent légèrement et s'éteignent lentement.
   function ding() {
     try {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      var t = audioCtx.currentTime;
-      [1760, 2640].forEach(function (f, i) {
-        var o = audioCtx.createOscillator();
-        var v = audioCtx.createGain();
-        o.frequency.value = f;
-        v.gain.setValueAtTime(i ? 0.04 : 0.12, t);
-        v.gain.exponentialRampToValueAtTime(0.0001, t + 1.1);
-        o.connect(v).connect(audioCtx.destination);
+      var ctx = audioCtx;
+      var t = ctx.currentTime;
+      var out = ctx.createGain();
+      out.gain.value = 0.5;
+      out.connect(ctx.destination);
+
+      // le coup du marteau
+      var noise = ctx.createBuffer(1, ctx.sampleRate * 0.02, ctx.sampleRate);
+      var data = noise.getChannelData(0);
+      for (var n = 0; n < data.length; n++) data[n] = (Math.random() * 2 - 1) * (1 - n / data.length);
+      var hit = ctx.createBufferSource();
+      hit.buffer = noise;
+      var band = ctx.createBiquadFilter();
+      band.type = "bandpass";
+      band.frequency.value = 5200;
+      band.Q.value = 1.2;
+      var hitGain = ctx.createGain();
+      hitGain.gain.value = 0.35;
+      hit.connect(band).connect(hitGain).connect(out);
+      hit.start(t);
+
+      // la cloche : fondamentale + partiels (ratios d'une cloche de comptoir)
+      var base = 2093;
+      [[1, 0.22, 2.4], [1.004, 0.16, 2.2], [2.32, 0.08, 1.3], [3.86, 0.05, 0.8], [5.41, 0.03, 0.5]].forEach(function (p) {
+        var o = ctx.createOscillator();
+        var g = ctx.createGain();
+        o.type = "sine";
+        o.frequency.value = base * p[0];
+        g.gain.setValueAtTime(0.0001, t);
+        g.gain.exponentialRampToValueAtTime(p[1], t + 0.004);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + p[2]);
+        o.connect(g).connect(out);
         o.start(t);
-        o.stop(t + 1.2);
+        o.stop(t + p[2] + 0.05);
       });
     } catch (e) {}
   }
@@ -752,11 +779,12 @@
         text.textContent = "Encore " + (3 - bellRings);
         return;
       }
-      text.textContent = "Service !";
+      text.textContent = "Service ! On vous écoute.";
       wake(faces, 150);
+      // 3 coups de sonnette = la commande part : on ouvre le formulaire
       setTimeout(function () {
         setBell(false);
-        toast("Commande envoyée en cuisine. La vôtre ?", { label: "Parlons projet", onClick: openFormNow });
+        openFormNow();
       }, 900);
     });
     bellEl.querySelector(".bell-close").addEventListener("click", function () { setBell(false); });
@@ -767,6 +795,13 @@
 
   /* --- Pluie d'assiettes, version téléphone : on penche pour débarrasser --- */
   var tiltOn = false;
+
+  // Assiettes blanches sur fond noir (footer), noires sur fond blanc
+  function plateSrc() {
+    var f = document.getElementById("footer");
+    var dark = f && f.getBoundingClientRect().top < window.innerHeight * 0.6;
+    return "assets/web/logo-icon-" + (dark ? "w" : "b") + ".webp";
+  }
 
   function startTiltRain() {
     if (tiltOn) return;
@@ -785,9 +820,10 @@
     var vw = window.innerWidth;
     var vh = window.innerHeight;
     var plates = [];
+    var src = plateSrc();
     for (var i = 0; i < 18; i++) {
       var img = document.createElement("img");
-      img.src = "assets/web/logo-icon-b.webp";
+      img.src = src;
       img.alt = "";
       var size = 44 + Math.random() * 40;
       img.style.width = size + "px";
@@ -910,11 +946,12 @@
         if (mqReduce.matches) { toast("Attention, ça glisse !"); return; }
         var rain = document.createElement("div");
         rain.className = "plate-rain";
+        var src = plateSrc();
         document.body.appendChild(rain);
         var vh = window.innerHeight;
         for (var i = 0; i < 30; i++) {
           var img = document.createElement("img");
-          img.src = "assets/web/logo-icon-b.webp";
+          img.src = src;
           img.alt = "";
           var size = 48 + Math.random() * 70;
           img.style.width = size + "px";
@@ -1079,7 +1116,15 @@
     var stepIndex = 0;
     var scrollStep = 0;
 
+    // fil de progression au-dessus des 5 étapes
+    var progressLine = document.createElement("span");
+    progressLine.className = "method-progress";
+    progressLine.setAttribute("aria-hidden", "true");
+    stepsList.appendChild(progressLine);
+    var setProgress = function (v) { stepsList.style.setProperty("--mp", Math.max(0.2, v).toFixed(3)); };
+
     var openStep = function (i) {
+      setProgress((i + 1) / steps.length);
       if (i === stepIndex && steps[i].classList.contains("is-active")) return;
       stepIndex = i;
       steps.forEach(function (st, k) {
@@ -1091,6 +1136,7 @@
     steps.forEach(function (st, k) {
       st.querySelector(".step-btn").addEventListener("click", function () { openStep(k); });
       if (canHover) st.addEventListener("mouseenter", function () { openStep(k); });
+      st.addEventListener("click", function () { openStep(k); });
     });
 
     // progression dans la carte figée (0 → 1) → étape 1 à 5
@@ -1282,6 +1328,15 @@
       });
     }
   });
+
+  // Desktop : au survol des expertises, la colonne s'élargit et
+  // « écrase » l'approche (la grille glisse)
+  var wrap = document.querySelector(".details-wrap");
+  var xpCol = document.getElementById("expertises-list");
+  if (wrap && xpCol && canHover) {
+    xpCol.addEventListener("mouseenter", function () { wrap.classList.add("xp-focus"); });
+    xpCol.addEventListener("mouseleave", function () { wrap.classList.remove("xp-focus"); });
+  }
 
 
   /* =======================================================
