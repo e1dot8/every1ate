@@ -1045,8 +1045,10 @@ body.e1-form-open {
   padding: 22px 34px;
   background: var(--paper-color) var(--paper);
   color: var(--black);
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+  touch-action: pan-y;
   transform: translateX(100%);
   transition: transform 380ms var(--ease);
   box-shadow: -15px 0 40px rgba(0, 0, 0, .10);
@@ -1357,9 +1359,12 @@ body.e1-form-open {
   padding: 22px 34px 32px;
   background: var(--black);
   color: var(--white);
-  transform: translateX(100%);
+  /* révélé par un rideau (clip-path) : ne dépasse jamais du panneau,
+     donc impossible de l'apercevoir en glissant sur le côté */
+  clip-path: inset(0 0 0 100%);
+  visibility: hidden;
   pointer-events: none;
-  transition: transform 400ms var(--ease);
+  transition: clip-path 400ms var(--ease), visibility 0s linear 400ms;
 }
 
 .e1-project-panel.is-success {
@@ -1367,7 +1372,12 @@ body.e1-form-open {
 }
 
 .e1-project-panel.is-success .e1-success {
-  transform: translateX(0);
+  visibility: visible;
+  transition: clip-path 400ms var(--ease);
+}
+
+.e1-project-panel.is-success .e1-success {
+  clip-path: inset(0);
   pointer-events: auto;
 }
 
