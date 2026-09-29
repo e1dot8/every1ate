@@ -31,20 +31,37 @@
       clocks[i].textContent = "PARIS, FR  " + time;
     }
 
-    // Comme un restaurant : le bandeau suit l'heure de Paris
-    var label = serviceLabel(parseInt(time.slice(0, 2), 10));
+    // Comme un restaurant : le bandeau suit l'heure de Paris,
+    // et la brigade vit au même rythme (dort la nuit, rush aux services)
+    var slot = serviceSlot(parseInt(time.slice(0, 2), 10) * 60 + parseInt(time.slice(3, 5), 10));
     document.querySelectorAll(".open-label").forEach(function (open) {
       if (open.hasAttribute("data-force")) return;
-      if (open.textContent !== label) open.textContent = label;
+      if (open.textContent !== slot.label) open.textContent = slot.label;
     });
+    if (document.documentElement.getAttribute("data-shift") !== slot.shift) {
+      document.documentElement.setAttribute("data-shift", slot.shift);
+    }
   }
 
-  function serviceLabel(h) {
-    if (h >= 23 || h < 6) return "Service de nuit.";
-    if (h < 11) return "Mise en place.";
-    if (h < 15) return "Service du midi.";
-    if (h < 19) return "La cuisine est ouverte.";
-    return "Service du soir.";
+  // [début en minutes depuis minuit, texte, humeur de la brigade]
+  var SLOTS = [
+    [0,    "Service de nuit.",       "night"],
+    [120,  "Grand nettoyage.",       "sleep"],
+    [270,  "Inventaire du matin.",   "sleep"],
+    [360,  "Relève du matin.",       "coffee"],
+    [450,  "Mise en place.",         "calm"],
+    [690,  "Coup de feu du midi.",   "rush"],
+    [855,  "Nettoyage & relève.",    "calm"],
+    [930,  "Service continu.",       "calm"],
+    [1110, "Rush du soir.",          "rush"],
+    [1320, "Derniers tickets.",      "calm"],
+    [1410, "Service de nuit.",       "night"]
+  ];
+
+  function serviceSlot(min) {
+    var s = SLOTS[0];
+    for (var k = 0; k < SLOTS.length; k++) if (min >= SLOTS[k][0]) s = SLOTS[k];
+    return { label: s[1], shift: s[2] };
   }
 
   updateClocks();
@@ -389,14 +406,33 @@
       faces.forEach(function (face) { visible.add(face); });
     }
 
-    // Clignements naturels, à intervalles irréguliers
+    // Clignements naturels, à intervalles irréguliers.
+    // Selon l'heure : la nuit ils dorment, au coup de feu ils s'agitent.
+    var shift = function () { return document.documentElement.getAttribute("data-shift"); };
+
     faces.forEach(function (face, i) {
       (function loop() {
+        var rush = shift() === "rush";
         setTimeout(function () {
-          if (visible.has(face) && !document.hidden) blink(face);
+          var s = shift();
+          if (visible.has(face) && !document.hidden && s !== "sleep") {
+            blink(face);
+            if (s === "rush" && Math.random() > .5) talk(face);
+          }
           loop();
-        }, 2600 + Math.random() * 3400 + i * 400);
+        }, (rush ? 1200 : 2600) + Math.random() * (rush ? 1600 : 3400) + i * 400);
       })();
+    });
+
+    // Réveil au survol / au toucher quand la brigade dort ou somnole
+    faces.forEach(function (face) {
+      var host = face.parentNode;
+      host.addEventListener("mouseenter", function () { face.classList.add("is-awake"); });
+      host.addEventListener("mouseleave", function () { face.classList.remove("is-awake"); });
+      host.addEventListener("touchstart", function () {
+        face.classList.add("is-awake");
+        setTimeout(function () { face.classList.remove("is-awake"); }, 3000);
+      }, { passive: true });
     });
 
     if (canHover) {
@@ -698,6 +734,7 @@
     saltPinches = 0;
     placeShaker(window.innerWidth / 2, window.innerHeight * 0.45);
     saltEl.classList.add("is-on");
+    syncEgg();
     saltEl.addEventListener("pointermove", onSaltMove);
     saltEl.addEventListener("pointerdown", onSaltDown);
     document.addEventListener("keydown", onSaltKey);
@@ -711,7 +748,7 @@
     saltEl.removeEventListener("pointermove", onSaltMove);
     saltEl.removeEventListener("pointerdown", onSaltDown);
     document.removeEventListener("keydown", onSaltKey);
-    setTimeout(function () { saltEl.classList.remove("is-on"); }, done ? 700 : 0);
+    setTimeout(function () { saltEl.classList.remove("is-on"); syncEgg(); }, done ? 700 : 0);
     if (done) toast("Chaque marque a son dosage. Le vôtre ?", { label: "Parlons projet", onClick: openFormNow });
   }
 
@@ -741,6 +778,32 @@
     if (!bellEl) return;
     bellEl.classList.toggle("is-open", open);
     bellEl.setAttribute("aria-hidden", open ? "false" : "true");
+    syncEgg();
+  }
+
+  // Un easter egg à l'écran → le CTA flottant s'efface (pas de superposition)
+  function syncEgg() {
+    var on = !!document.querySelector(".bell.is-open, .salt.is-on, .plate-rain.is-tilt, .ticket.is-open");
+    document.documentElement.classList.toggle("egg-open", on);
+  }
+
+  // Coup de feu interrompu (un autre easter egg démarre)
+  var rushTimer = null;
+  function stopRush() {
+    clearTimeout(rushTimer);
+    document.documentElement.classList.remove("is-rush");
+    if (track) track.style.animationDuration = "";
+  }
+
+  // Un seul easter egg à la fois : on range les autres avant d'en lancer un
+  function closeEggs() {
+    if (document.documentElement.classList.contains("is-rush")) {
+      stopRush();
+      busy = false;
+    }
+    if (bellEl && bellEl.classList.contains("is-open")) setBell(false);
+    if (saltEl && saltEl.classList.contains("is-on")) stopSalt(false);
+    closeTicket();
   }
 
   function startBell() {
@@ -793,6 +856,7 @@
       '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg>';
     layer.appendChild(hint);
     document.body.appendChild(layer);
+    syncEgg();
 
     var vw = window.innerWidth;
     var vh = window.innerHeight;
@@ -874,6 +938,7 @@
       window.removeEventListener("deviceorientation", onTilt);
       layer.remove();
       tiltOn = false;
+      syncEgg();
       toast("Table débarrassée. Merci !");
     }
     requestAnimationFrame(frame);
@@ -894,9 +959,8 @@
           });
           if (++n >= 8) clearInterval(loop);
         }, 600);
-        setTimeout(function () {
-          document.documentElement.classList.remove("is-rush");
-          if (track) track.style.animationDuration = "";
+        rushTimer = setTimeout(function () {
+          stopRush();
           toast("Service terminé. On vous écoute ?", { label: "Parlons projet", onClick: openFormNow });
         }, 5000);
       });
@@ -910,6 +974,7 @@
       ticket.classList.add("is-open");
       ticket.setAttribute("aria-hidden", "false");
       ticketY = window.scrollY;
+      syncEgg();
     },
 
     /* 3. PLUIE D'ASSIETTES — l'icône tombe par dizaines et rebondit */
@@ -1032,6 +1097,7 @@
   function run(name) {
     var fn = eggs[name];
     if (!fn) return;
+    closeEggs();
     fn();
     markFound(name);
   }
@@ -1093,6 +1159,7 @@
     if (!ticketEl || !ticketEl.classList.contains("is-open")) return;
     ticketEl.classList.remove("is-open");
     ticketEl.setAttribute("aria-hidden", "true");
+    syncEgg();
   }
 
   var ticketClose = document.querySelector(".ticket-close");
@@ -1165,6 +1232,49 @@
       tosses += 1;
       if (tosses % 3 === 0) toast("Joli coup de poêle.");
     });
+  }
+
+
+  /* =======================================================
+     MÉTHODE — une étape ouverte à la fois
+     Clic sur un chiffre pour l'ouvrir. Sur grand écran, les
+     étapes défilent seules tant que personne n'y touche.
+     ======================================================= */
+
+  var stepsList = document.querySelector(".method-steps");
+  if (stepsList) {
+    var steps = Array.prototype.slice.call(stepsList.querySelectorAll(".step"));
+    var stepIndex = 0;
+    var stepTimer = null;
+    var stepTouched = false;
+    var mqWide = window.matchMedia("(min-width: 901px)");
+
+    var openStep = function (i) {
+      stepIndex = i;
+      steps.forEach(function (st, k) {
+        st.classList.toggle("is-active", k === i);
+        st.querySelector(".step-btn").setAttribute("aria-expanded", k === i ? "true" : "false");
+      });
+    };
+    var stopSteps = function () { clearInterval(stepTimer); stepTimer = null; };
+    var playSteps = function () {
+      if (stepTouched || stepTimer || mqReduce.matches || !mqWide.matches) return;
+      stepTimer = setInterval(function () { openStep((stepIndex + 1) % steps.length); }, 4200);
+    };
+
+    steps.forEach(function (st, k) {
+      st.querySelector(".step-btn").addEventListener("click", function () {
+        stepTouched = true;
+        stopSteps();
+        openStep(k);
+      });
+    });
+
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { if (e.isIntersecting) playSteps(); else stopSteps(); });
+      }, { threshold: 0.4 }).observe(stepsList);
+    }
   }
 
 

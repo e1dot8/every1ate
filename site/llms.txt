@@ -22,10 +22,10 @@ On part des bons ingrédients : ce qui fait déjà la singularité d'une marque 
 
 Méthode end-to-end, sans hiérarchie, avec la même équipe du premier échange à la livraison :
 1. La recette — stratégie & concept (Johan)
-2. La préparation — direction artistique & pré-production (Pierre)
-3. La cuisson — tournage & production (Charles)
-4. Le dressage — post-production & finitions (Pierre & Charles)
-5. Le service — livraison & diffusion (les trois)
+2. La préparation — direction artistique & pré-production (Johan, Pierre, Charles)
+3. La cuisson — tournage & production (Johan, Pierre, Charles)
+4. Le dressage — post-production & finitions (Pierre, Charles)
+5. Le service — livraison & diffusion (Johan, Charles)
 
 ## Travailler avec EVERY1.ATE
 

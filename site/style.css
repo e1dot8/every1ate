@@ -825,6 +825,19 @@ body.e1-form-open {
   line-height: 1.3;
 }
 
+/* Rôles : toujours sur 2 lignes, taille ajustée à la colonne
+   (23 caractères max. par ligne en Courier = 13,8em) */
+@supports (container-type: inline-size) {
+  .member {
+    container-type: inline-size;
+  }
+
+  .member-role {
+    font-size: min(19px, calc((100cqw - 14px) / 14));
+    white-space: nowrap;
+  }
+}
+
 
 /* =========================================================
    3. FOOTER — carte finale : logo · CTA · infos · marquee
@@ -2839,8 +2852,7 @@ html.is-rush .crew-body .steam { animation: gw-steam 400ms steps(1) infinite; }
   grid-template-columns: minmax(0, 27fr) minmax(0, 74fr);
   column-gap: clamp(40px, 6.3vw, 110px);
   align-items: baseline;
-  padding-top: clamp(36px, 4vw, 60px);
-  border-top: 1px solid var(--black);
+  padding-top: clamp(40px, 5vw, 90px);
 }
 
 .method-intro {
@@ -2912,55 +2924,107 @@ html.is-rush .crew-body .steam { animation: gw-steam 400ms steps(1) infinite; }
 }
 
 
+/* Les 5 étapes : de grands chiffres, une seule étape ouverte à la fois */
 .method-steps {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: clamp(16px, 2vw, 32px);
-  margin: clamp(28px, 3vw, 48px) 0 0;
+  display: flex;
+  gap: clamp(14px, 2vw, 32px);
+  margin: clamp(36px, 4vw, 64px) 0 0;
   padding: 0;
   list-style: none;
 }
 
 .step {
-  padding-top: 14px;
-  border-top: 2px solid var(--black);
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  gap: clamp(16px, 2vw, 34px);
+  overflow: hidden;
+  padding-top: 20px;
+  border-top: 1px solid rgba(0, 0, 0, .16);
+  transition: flex-grow 620ms var(--ease), border-color 300ms ease;
+}
+
+.step.is-active {
+  flex-grow: 4;
+  border-top-color: var(--black);
+}
+
+.step-btn {
+  flex: none;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 
 .step-n {
-  font-family: var(--font-text);
-  font-size: 12px;
+  display: block;
+  font-family: var(--font-title);
+  font-size: clamp(88px, 10.5vw, 180px);
   font-weight: 700;
+  line-height: .78;
+  letter-spacing: -.04em;
+  color: #d0d0d0;
+  transition: color 300ms ease;
 }
 
-.step-name {
-  margin-top: 6px;
+.step-btn:hover .step-n,
+.step-btn:focus-visible .step-n {
+  color: var(--pen);
+}
+
+.step.is-active .step-n {
+  color: var(--black);
+}
+
+/* le nom dans le bouton sert au lecteur d'écran et au mobile */
+.step-btn .step-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.step-body {
+  flex: none;
+  width: clamp(230px, 25vw, 420px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 260ms ease, visibility 0s linear 260ms;
+}
+
+.step.is-active .step-body {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 420ms ease 220ms;
+}
+
+.step-title {
   font-family: var(--font-title);
-  font-size: clamp(18px, 1.5vw, 24px);
+  font-size: clamp(20px, 1.7vw, 28px);
   font-weight: 700;
   line-height: 1;
   text-transform: uppercase;
 }
 
 .step-pro {
-  margin-top: 6px;
+  margin-top: 8px;
   font-family: var(--font-title);
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
+  color: rgba(0, 0, 0, .55);
 }
 
 .step-text {
-  margin-top: 10px;
-  font-size: clamp(12px, .9vw, 14px);
-  line-height: 1.4;
-}
-
-.step-who {
-  margin-top: 10px;
-  font-family: var(--font-hand);
-  font-size: 19px;
-  font-weight: 700;
-  color: var(--pen);
+  margin-top: 14px;
+  font-size: clamp(13px, 1vw, 16px);
+  line-height: 1.45;
 }
 
 @media (max-width: 900px) {
@@ -2970,14 +3034,57 @@ html.is-rush .crew-body .steam { animation: gw-steam 400ms steps(1) infinite; }
   }
 
   .method-steps {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: block;
+    margin-top: 28px;
   }
-}
 
-@media (max-width: 480px) {
-  .method-steps {
-    grid-template-columns: 1fr;
-    gap: 22px;
+  .step {
+    display: block;
+    padding: 14px 0 16px;
+  }
+
+  .step-btn {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    width: 100%;
+  }
+
+  .step-n {
+    width: 1.1ch;
+    font-size: 46px;
+    line-height: .85;
+  }
+
+  .step-btn .step-name {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    font-family: var(--font-title);
+    font-size: 19px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: rgba(0, 0, 0, .4);
+    transition: color 300ms ease;
+  }
+
+  .step.is-active .step-name {
+    color: var(--black);
+  }
+
+  .step-title {
+    display: none;
+  }
+
+  .step-body {
+    width: auto;
+    padding-left: calc(46px * .62 + 16px);
+  }
+
+  .step:not(.is-active) .step-body {
+    display: none;
   }
 }
 
@@ -3390,6 +3497,101 @@ body.chef-open {
   }
   .legal dd {
     margin-bottom: 10px;
+  }
+}
+
+
+/* =========================================================
+   AJUSTEMENTS — clarté et respiration
+   ========================================================= */
+
+/* CTA flottant : bloc noir franc (plus de négatif qui se mélange au texte) */
+.float-cta {
+  mix-blend-mode: normal;
+  border-color: var(--black);
+  background: var(--black);
+  color: var(--white);
+}
+
+/* Pendant un easter egg à l'écran, le CTA flottant s'efface */
+html.egg-open .float-cta {
+  visibility: hidden;
+  opacity: 0;
+}
+
+/* Pas de filets entre les sections : l'espace suffit */
+.footer-main {
+  border-top: 0;
+}
+
+@supports (container-type: inline-size) {
+  @media (max-width: 900px) {
+    .member-role {
+      font-size: min(15px, calc((60cqw - 36px) / 14));
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .note-method {
+    display: none;
+  }
+
+  /* La cloche au centre de l'écran, loin du CTA et des notifications */
+  .bell {
+    top: 50%;
+    bottom: auto;
+    transform: translate(-50%, -44%);
+  }
+
+  .bell.is-open {
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* --- La brigade vit au rythme de la cuisine (heure de Paris) --- */
+
+/* Nuit : yeux fermés, ça dort (le survol réveille) */
+html[data-shift="sleep"] .face:not(.is-awake) .eye::after {
+  transform: scaleY(1);
+}
+
+html[data-shift="sleep"] .member-photo::after {
+  content: "z z z";
+  position: absolute;
+  top: 5%;
+  right: 8%;
+  z-index: 3;
+  font-family: var(--font-hand);
+  font-size: clamp(18px, 1.6vw, 26px);
+  font-weight: 700;
+  color: var(--pen);
+  pointer-events: none;
+  animation: e1-zzz 2.8s ease-in-out infinite;
+  transition: opacity 200ms ease;
+}
+
+html[data-shift="sleep"] .member-photo:hover::after {
+  opacity: 0;
+}
+
+html[data-shift="sleep"] .chef-body * {
+  animation-play-state: paused !important;
+}
+
+/* Petit matin : paupières lourdes, le café n'a pas encore fait effet */
+html[data-shift="coffee"] .face:not(.is-awake) .eye::after {
+  transform: scaleY(.5);
+}
+
+@keyframes e1-zzz {
+  0%, 100% { transform: translateY(0) rotate(-8deg); opacity: .95; }
+  50%      { transform: translateY(-7px) rotate(-3deg); opacity: .45; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-shift="sleep"] .member-photo::after {
+    animation: none;
   }
 }
 
