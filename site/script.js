@@ -548,9 +548,18 @@
     event.preventDefault();
     // position "dans le flux" : hauteur de tout ce qui précède la brigade
     var target = hero.offsetHeight;
-    Array.prototype.forEach.call(mainCard.children, function (el) {
-      if (el.compareDocumentPosition(brigade) & Node.DOCUMENT_POSITION_FOLLOWING) target += el.offsetHeight;
-    });
+    var addBefore = function (parent) {
+      Array.prototype.forEach.call(parent.children, function (el) {
+        if (el === brigade) return;
+        if (el.contains(brigade)) {
+          // desktop : la brigade est une colonne en haut de la carte
+          if (getComputedStyle(el).display !== "grid") addBefore(el);
+        } else if (el.compareDocumentPosition(brigade) & Node.DOCUMENT_POSITION_FOLLOWING) {
+          target += el.offsetHeight;
+        }
+      });
+    };
+    addBefore(mainCard);
     window.scrollTo({ top: target, behavior: mqReduce.matches ? "auto" : "smooth" });
   }
 

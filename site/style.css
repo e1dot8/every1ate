@@ -4028,6 +4028,111 @@ html.egg-open .float-cta.is-visible {
 
 
 /* =========================================================
+   HYBRIDE DESKTOP (> 900px)
+   Approche · Expertises · Brigade en 3 colonnes sur 1 écran
+   (une seule carte), puis la méthode en pleine largeur.
+   Mobile : chaque section reste une carte à part.
+   ========================================================= */
+
+.details-wrap {
+  z-index: 2;
+}
+
+@media (max-width: 900px) {
+  /* le conteneur s'efface : ce sont ses 3 sections qui s'empilent */
+  .js .details-wrap.stack-card {
+    position: static;
+  }
+
+  .sec-brigade {
+    z-index: 3;
+  }
+}
+
+@media (min-width: 901px) {
+  .details-wrap {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 27fr) minmax(0, 21fr) minmax(0, 53fr);
+    column-gap: clamp(40px, 5vw, 96px);
+    align-items: start;
+    padding: clamp(56px, 5vw, 96px) var(--gutter) var(--sec-gap);
+    background: var(--white);
+    box-shadow: 0 -18px 40px -14px rgba(0, 0, 0, .45);
+  }
+
+  /* dans la grille, les 3 sections sont de simples colonnes */
+  .js .details-wrap .stack-card {
+    position: relative;
+    top: auto;
+  }
+
+  .details-wrap .sec {
+    display: block;
+    padding: 0;
+    box-shadow: none;
+    background: none;
+    z-index: auto;
+  }
+
+  .details-wrap .sec-label {
+    margin-bottom: 1em;
+    padding-top: 0;
+    font-size: clamp(19px, 1.65vw, 28px);
+    letter-spacing: -.01em;
+  }
+
+  .details-wrap .lead {
+    max-width: none;
+    font-size: clamp(22px, 1.95vw, 34px);
+    line-height: 1.08;
+  }
+
+  .details-wrap .approche-cols {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 1.1em;
+    margin-top: 1.4em;
+  }
+
+  .details-wrap .approche-cols .approche-text {
+    font-size: clamp(13px, 1vw, 16px);
+    line-height: 1.45;
+  }
+
+  .details-wrap #expertises-list .expertises {
+    font-size: clamp(15px, 1.3vw, 22px);
+  }
+
+  .details-wrap #expertises-list .xp-toggle {
+    align-items: flex-start;
+    padding: .38em 0;
+  }
+
+  .details-wrap #expertises-list .xp-plus {
+    margin-top: .25em;
+  }
+
+  .details-wrap #expertises-list .xp-inner {
+    font-size: clamp(13px, .95vw, 15px);
+  }
+
+  .details-wrap .note-egg {
+    margin-top: 22px;
+  }
+
+  .details-wrap .sec-brigade .brigade {
+    column-gap: 4px;
+    margin-left: -10px;
+  }
+
+  /* la méthode passe juste après la carte */
+  .method {
+    z-index: 4;
+  }
+}
+
+
+/* =========================================================
    ACCESSIBILITÉ : animations réduites
    ========================================================= */
 
