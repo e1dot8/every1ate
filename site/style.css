@@ -3618,9 +3618,10 @@ html[data-shift="coffee"] .face:not(.is-awake) .eye::after {
 }
 
 .card-details      { z-index: 2; padding-bottom: var(--sec-gap); }
-.method            { z-index: 3; }
-.sec-brigade       { z-index: 4; }
-.footer.stack-card { z-index: 5; }
+.card-xp           { z-index: 3; }
+.method            { z-index: 4; }
+.sec-brigade       { z-index: 5; }
+.footer.stack-card { z-index: 6; }
 
 /* --- Section type --- */
 .sec {
@@ -3821,6 +3822,87 @@ html[data-shift="coffee"] .face:not(.is-awake) .eye::after {
   opacity: .92;
 }
 
+/* Pas d'ombre entre les sections et le footer */
+.footer.stack-card {
+  box-shadow: none;
+}
+
+/* Logo du bas : une signature, pas un titre */
+.footer-sign {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.footer-sign-btn img {
+  width: clamp(110px, 10vw, 170px);
+  opacity: 1;
+  transition: transform var(--t-base) var(--ease);
+}
+
+.footer-sign-btn:hover img {
+  transform: rotate(-4deg);
+}
+
+/* --- Annotations au stylo, réparties dans les sections --- */
+.note-psst {
+  margin: 0 0 18px;
+  padding-left: 0;
+}
+
+.note-brigade {
+  margin: 0 0 16px;
+  padding-left: 0;
+}
+
+.note-method {
+  margin-top: 18px;
+  padding-left: 0;
+}
+
+.note-egg {
+  display: block;
+  margin-top: 26px;
+  padding-left: 0;
+  cursor: pointer;
+  transition: transform var(--t-fast) var(--ease), opacity var(--t-fast) ease;
+}
+
+.note-egg:hover {
+  transform: rotate(0deg) translateX(4px);
+}
+
+.note-footer {
+  margin-top: 30px;
+  color: #ff5a4f;
+}
+
+/* --- Méthode : le nom de chaque phase toujours visible --- */
+.step-btn .step-name {
+  position: static;
+  display: block;
+  width: auto;
+  height: auto;
+  margin-top: 14px;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+  font-family: var(--font-title);
+  font-size: clamp(12px, 1vw, 15px);
+  font-weight: 700;
+  line-height: 1.1;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, .4);
+  transition: color 300ms ease;
+}
+
+.step.is-active .step-btn .step-name {
+  color: var(--black);
+}
+
+.step-title {
+  display: none;
+}
+
 /* --- CTA flottant : sortie douce (fondu + léger recul) --- */
 .fc-short {
   display: none;
@@ -3855,6 +3937,11 @@ html.egg-open .float-cta.is-visible {
     grid-template-columns: minmax(0, 1fr);
     row-gap: 1.1em;
   }
+
+  .step-btn .step-name {
+    margin-top: 0;
+    font-size: 19px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -3862,8 +3949,14 @@ html.egg-open .float-cta.is-visible {
     --sec-gap: 88px;
   }
 
-  .open-extra {
-    display: none;
+  /* Vidéo adoucie : le blanc n'agresse plus les yeux */
+  .hero-video {
+    filter: brightness(.68);
+  }
+
+  .m-typo,
+  .m-icon {
+    will-change: transform, opacity;
   }
 
   .lead {

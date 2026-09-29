@@ -97,6 +97,10 @@
     return 1 - Math.pow(1 - t, 3);
   }
 
+  function easeInOut(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
   function lerp(a, b, t) {
     return a + (b - a) * t;
   }
@@ -145,8 +149,8 @@
 
     var p = m.distance > 0 ? clamp(-hero.getBoundingClientRect().top / m.distance) : 0;
 
-    var a = ease(range(p, 0, 0.35));     // logo → barre
-    var b = ease(range(p, 0.08, 0.42));  // statement monte prendre sa place
+    var a = easeInOut(range(p, 0, 0.5));     // logo → barre, en douceur
+    var b = easeInOut(range(p, 0.12, 0.55)); // statement monte prendre sa place
     var d = ease(range(p, 0.82, 1));     // sortie de la barre
 
     var barOffset = (a - 1 - d) * m.barH;
@@ -166,7 +170,7 @@
 
     topBar.style.opacity = (1 - clamp(a * 2)).toFixed(3);
 
-    statement.style.opacity = clamp(b * 1.4).toFixed(3);
+    statement.style.opacity = clamp((b - 0.15) * 1.6).toFixed(3);
     statement.style.transform = "translateY(calc(-50% + " + ((1 - b) * m.stageH * 0.42).toFixed(2) + "px))";
 
   }

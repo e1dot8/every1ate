@@ -108,7 +108,7 @@
 
     <!-- Top bar initiale -->
     <div class="hero-top">
-      <p class="hero-open open-label" id="hero-open">Ouverts aux projets<span class="open-extra"> · Réponse sous 48&nbsp;h</span></p>
+      <p class="hero-open open-label" id="hero-open">Ouverts aux projets</p>
       <p class="hero-clock" data-paris-clock>PARIS, FR 00:00:00</p>
     </div>
 
@@ -147,20 +147,21 @@
 <!-- =====================================================
      2. APPROCHE + EXPERTISES (1re carte)
      ===================================================== -->
-<div id="details-section" class="stack-card card-details">
+<div id="details-section">
 
-  <section id="approche" class="sec" aria-labelledby="t-approche">
+  <section id="approche" class="stack-card card-details sec" aria-labelledby="t-approche">
     <h2 class="sec-label" id="t-approche" data-reveal>Notre approche</h2>
     <div class="sec-content">
-      <p class="lead" data-reveal data-mark>On part des <b data-egg="plat" role="button" tabindex="0">bons ingrédients</b>&nbsp;: ce qui fait déjà la <span class="pen pen-circle" data-egg="pluie" role="button" tabindex="0">singularité<svg class="pen-svg" viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path pathLength="1" d="M18 38C8 20 58 5 112 6c52 1 86 12 80 29-5 18-62 23-104 21C44 54 5 46 10 30 14 18 44 9 74 8"/></svg></span> d’une marque.</p>
+      <p class="note note-left note-psst" data-reveal>psst… les mots surlignés se cliquent</p>
+      <p class="lead" data-reveal data-mark>On part des <b data-egg="plat" role="button" tabindex="0">bons ingrédients</b>&nbsp;: ce qui fait déjà la <span class="pen pen-circle">singularité<svg class="pen-svg" viewBox="0 0 200 60" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path pathLength="1" d="M18 38C8 20 58 5 112 6c52 1 86 12 80 29-5 18-62 23-104 21C44 54 5 46 10 30 14 18 44 9 74 8"/></svg></span> d’une marque.</p>
       <div class="approche-cols" data-reveal data-mark>
         <p class="approche-text">Ses produits, son histoire, sa communauté, ses codes, son environnement. On regarde aussi ce qui bouge autour d’elle, et on ne met pas le même assaisonnement sur toutes les marques.</p>
-        <p class="approche-text"><b data-egg="rush" role="button" tabindex="0">Les tendances nous intéressent quand elles servent le projet.</b> Sinon, on prend le contre-pied. La bonne recette crée du lien entre la marque et les gens, et on sait la mener jusqu’au bout.</p>
+        <p class="approche-text"><strong>Les tendances nous intéressent quand elles servent le projet.</strong> Sinon, on prend le contre-pied. La bonne recette crée du lien entre la marque et les gens, et on sait la mener jusqu’au bout.</p>
       </div>
     </div>
   </section>
 
-  <section id="expertises-list" class="sec" aria-labelledby="t-expertises">
+  <section id="expertises-list" class="stack-card card-details card-xp sec" aria-labelledby="t-expertises">
     <h2 class="sec-label" id="t-expertises" data-reveal>Nos expertises</h2>
     <div class="sec-content" data-reveal>
     <ul class="expertises">
@@ -225,6 +226,7 @@
         </div>
       </li>
     </ul>
+    <button type="button" class="note note-left note-egg" data-egg="rush">tout est fait maison… et ça chauffe vite</button>
     </div>
   </section>
 
@@ -237,7 +239,10 @@
   <div class="method-pin">
     <div class="method-head">
       <h2 class="sec-label" id="method-title">Notre méthode</h2>
-      <p class="method-intro">De l’idée à la diffusion, un seul studio&nbsp;: on pense, on crée et on produit en interne, avec la même équipe du premier échange à la livraison.</p>
+      <div class="method-intro-wrap">
+        <p class="method-intro">De l’idée à la diffusion, un seul studio&nbsp;: on pense, on crée et on produit en interne, avec la même équipe du premier échange à la livraison.</p>
+        <p class="note note-left note-method">même méthode pour tous, seul l’assaisonnement change</p>
+      </div>
     </div>
     <ol class="method-steps">
     <li class="step is-active">
@@ -290,6 +295,7 @@
 <section id="brigade-grid" class="stack-card sec sec-brigade" aria-labelledby="t-brigade">
   <h2 class="sec-label" id="t-brigade" data-reveal>La brigade</h2>
   <div class="sec-content">
+    <p class="note note-left note-brigade" data-reveal>cliquez sur un visage pour ouvrir sa fiche</p>
     <div class="brigade">
 
       <article class="member" id="brigade-johan" data-reveal data-stats="Lecture du marché:96|Direction créative:95|Pilotage &amp; décision:95|Concepts:94|Esprit d’équipe:96">
@@ -385,6 +391,7 @@
       <a id="footer-email" href="mailto:hello@every1ate.com?subject=Contact%20%E2%80%94%20Every1.ate">hello@every1ate.com</a>
       <button type="button" class="copy-mail" data-copy="hello@every1ate.com">Copier</button>
     </div>
+    <button type="button" class="note note-left note-egg note-footer" data-egg="cloche">une idée&nbsp;? sonnez, on arrive</button>
   </div>
 
   <div class="e1-marquee">
@@ -421,8 +428,8 @@
     <p id="footer-legal" class="footer-meta">© 2026 EVERY1.ATE · Studio créatif &amp; stratégique, Paris</p>
   </div>
 
-  <div class="footer-sign" aria-hidden="true">
-    <img src="assets/web/logo-typo-w.webp" alt="" loading="lazy">
+  <div class="footer-sign">
+    <button type="button" class="footer-sign-btn" data-egg="pluie" aria-label="EVERY1.ATE"><img src="assets/web/logo-full-w.webp" alt="" loading="lazy"></button>
   </div>
 
 </footer>
@@ -494,7 +501,7 @@
     <button type="button" class="carte-item" data-run="cloche"><span>La cloche du service</span></button>
     <button type="button" class="carte-item" data-run="pluie"><span>Pluie d’assiettes</span></button>
   </div>
-  <p class="carte-hint">Indice : sur le site, les mots entourés et surlignés font la même chose.</p>
+  <p class="carte-hint">Indice : les mots surlignés, certaines annotations au stylo et le logo du bas font la même chose.</p>
 </div>
 
 <!-- Easter egg : coup de feu (bandeau) -->
