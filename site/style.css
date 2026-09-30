@@ -2300,44 +2300,6 @@ html.is-rush .crew-body .steam { animation: gw-steam 400ms steps(1) infinite; }
   will-change: transform;
 }
 
-/* --- Pluie d'assiettes (mobile) : penchez pour débarrasser --- */
-.plate-rain.is-tilt {
-  pointer-events: auto;
-  touch-action: none;
-}
-
-.plate-rain.is-tilt img {
-  left: 0;
-  transform: translateY(-200px);
-}
-
-.tilt-hint {
-  position: absolute;
-  top: 38%;
-  left: 20px;
-  right: 20px;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 12px 14px 11px;
-  background: var(--black);
-  color: var(--white);
-  font-family: var(--font-text);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.35;
-  text-transform: uppercase;
-  text-align: center;
-}
-
-.tilt-hint svg {
-  flex: none;
-  width: 18px;
-  height: 18px;
-  animation: e1-nudge 1s ease-in-out infinite;
-}
 
 @keyframes e1-nudge {
   50% { transform: translateX(6px); }
@@ -2465,7 +2427,6 @@ html.is-rush .crew-body .steam { animation: gw-steam 400ms steps(1) infinite; }
 @media (prefers-reduced-motion: reduce) {
   .bell-btn.is-ringing,
   .salt-shaker.is-shaking svg,
-  .tilt-hint svg { animation: none; }
 }
 
 /* --- Clin d'œil : une seule paupière --- */
@@ -2984,7 +2945,6 @@ html.is-rush .crew-body .steam { animation: gw-steam 400ms steps(1) infinite; }
   transition: color 300ms ease;
 }
 
-.step-btn:hover .step-n,
 .step-btn:focus-visible .step-n {
   color: var(--pen);
 }
@@ -4192,33 +4152,6 @@ html.egg-open .float-cta.is-visible {
   transform: translateX(-50%) scale(1.07) rotate(2deg);
 }
 
-/* --- Expertises (desktop) : la colonne glisse et écrase l'approche --- */
-@media (min-width: 901px) {
-  .details-wrap {
-    --g: clamp(40px, 5vw, 96px);
-    column-gap: var(--g);
-    transition: grid-template-columns 650ms var(--ease);
-  }
-
-  .details-wrap.xp-focus {
-    grid-template-columns: minmax(0, 11fr) minmax(0, 37fr) minmax(0, 53fr);
-  }
-
-  /* le texte de l'approche garde sa largeur : il se fait rogner, pas tasser */
-  .details-wrap #approche {
-    overflow: hidden;
-    transition: opacity 500ms ease;
-  }
-
-  .details-wrap #approche > * {
-    width: calc((100vw - 2 * var(--gutter) - 2 * var(--g)) * 27 / 101 - 12px);
-  }
-
-  .details-wrap.xp-focus #approche {
-    opacity: .25;
-  }
-}
-
 /* --- Méthode : progression + chiffre qui « tombe » à sa place --- */
 .method-steps {
   position: relative;
@@ -4358,54 +4291,357 @@ html.egg-open .float-cta.is-visible {
     margin-top: 10px;
   }
 
-  /* footer façon Yard : titre, signature géante, infos, bandeau */
+}
+
+
+/* =========================================================
+   V4 — cuisine ouverte, FR / EN, temps d'arrêt, fiches au survol,
+   notifications centrées, footer hiérarchisé
+   ========================================================= */
+
+/* --- Top bar : l'heure + FR / EN --- */
+.hero-top-right {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(14px, 1.6vw, 26px);
+}
+
+.lang-switch {
+  font-family: var(--font-text);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.lang-switch a {
+  opacity: .55;
+  transition: opacity var(--t-fast) ease;
+}
+
+.lang-switch a:hover,
+.lang-switch a[aria-current="true"] {
+  opacity: 1;
+}
+
+.lang-switch a[aria-current="true"] {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .hero-top {
+    align-items: flex-start;
+  }
+  .open-moment {
+    display: block;
+    opacity: .75;
+  }
+  .open-sep {
+    display: none;
+  }
+  .hero-top-right {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+}
+
+/* la carte principale occupe au moins tout l'écran (le hero ne dépasse plus dessous) */
+@media (min-width: 901px) {
+  .details-wrap {
+    min-height: 100vh;
+  }
+  .chef.is-peek .chef-cycle {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+  .chef.is-peek .chef-cycle li {
+    display: grid;
+    grid-template-columns: 26px 1fr auto;
+    align-items: baseline;
+    gap: 8px;
+    padding: 6px 10px;
+  }
+  .chef.is-peek .chef-cycle span {
+    margin: 0;
+    text-align: right;
+  }
+}
+
+/* --- Temps d'arrêt : la carte reste à l'écran avant la suivante --- */
+.stack-hold {
+  height: 70vh;
+  pointer-events: none;
+}
+
+.stack-hold-m {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .stack-hold {
+    height: 45vh;
+    height: 45svh;
+  }
+
+  .stack-hold-m {
+    display: block;
+    height: 40vh;
+    height: 40svh;
+    pointer-events: none;
+  }
+}
+
+/* --- Expertises : intitulés en Courier Prime capitales, graisse normale --- */
+#expertises-list .xp-title,
+.details-wrap #expertises-list .xp-title {
+  font-family: var(--font-text);
+  font-weight: 400;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+/* --- Surlignages supplémentaires --- */
+.approche-cols b,
+.note-mark {
+  cursor: pointer;
+}
+
+.note-mark {
+  padding: 0 .12em;
+  background: var(--fluo);
+  color: var(--pen);
+  font-weight: 700;
+}
+
+/* --- Formulaire : les bons ingrédients de la marque --- */
+.e1-opt {
+  font-weight: 400;
+  opacity: .55;
+  text-transform: none;
+}
+
+.e1-textarea-sm {
+  min-height: 72px;
+}
+
+.e1-field.is-highlight label {
+  background: var(--fluo);
+  transition: background 300ms ease;
+}
+
+/* --- La salière : consigne dans l'écran, pas en notification --- */
+.salt-hint {
+  position: absolute;
+  top: 22%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 11px 16px 10px;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* --- Notifications : au centre de l'écran, une fois l'animation finie --- */
+.toast,
+.toast.is-visible {
+  top: 50%;
+  left: 50%;
+  right: auto;
+  bottom: auto;
+  max-width: min(440px, calc(100% - 40px));
+  padding: 16px 20px 15px;
+  text-align: center;
+  box-shadow: 8px 8px 0 var(--fluo);
+}
+
+.toast {
+  transform: translate(-50%, -40%) scale(.96);
+}
+
+.toast.is-visible {
+  transform: translate(-50%, -50%);
+}
+
+.toast.has-action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+@media (max-width: 480px) {
+  .toast,
+  .toast.is-visible {
+    left: 50%;
+    right: auto;
+    width: calc(100% - 40px);
+    text-align: center;
+  }
+  .toast { transform: translate(-50%, -40%) scale(.96); }
+  .toast.is-visible { transform: translate(-50%, -50%); }
+}
+
+/* --- Fiche chef (desktop, souris) : au survol, dans la moitié gauche --- */
+@media (min-width: 901px) {
+  .chef.is-peek .chef-backdrop,
+  .chef.is-peek .chef-arrow {
+    display: none;
+  }
+
+  .chef.is-peek .chef-bubble {
+    inset: 0 auto 0 0;
+    width: var(--peek-w, 48vw);
+    height: 100vh;
+    overflow-y: auto;
+    padding: 0 clamp(24px, 2.6vw, 44px) 32px;
+    box-shadow: 18px 0 40px -18px rgba(0, 0, 0, .35);
+    animation: e1-peek 380ms var(--ease);
+  }
+
+  /* même structure, même taille pour les trois fiches */
+  .chef.is-peek .chef-layout {
+    grid-template-columns: minmax(0, 36%) minmax(0, 1fr);
+    column-gap: clamp(18px, 2vw, 32px);
+    align-items: start;
+  }
+
+  .chef.is-peek .chef-portrait {
+    width: 78%;
+  }
+
+  .chef.is-peek .chef-name {
+    font-size: clamp(34px, 3.4vw, 58px);
+  }
+
+  .chef.is-peek .chef-fiche {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 12px;
+  }
+}
+
+@keyframes e1-peek {
+  from { transform: translateX(-24px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* --- Méthode : pas d'effet au survol, seul le scroll pilote --- */
+.step {
+  cursor: default;
+}
+
+/* --- Footer : « Une idée ? Sonnez. » · horloge · email à droite --- */
+.footer-title {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: .2em;
+}
+
+.i-bell {
+  width: .62em;
+  height: .47em;
+  margin-bottom: .1em;
+  transform-origin: 50% 90%;
+}
+
+.footer-title:hover .i-bell {
+  animation: e1-ring 460ms ease-in-out;
+}
+
+.footer-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+  margin-top: clamp(26px, 2.8vw, 44px);
+}
+
+.footer-clock {
+  font-family: var(--font-text);
+  font-size: clamp(14px, 1.1vw, 18px);
+  font-weight: 700;
+  letter-spacing: .04em;
+  white-space: pre;
+}
+
+.footer-info .footer-mail {
+  margin-top: 0;
+}
+
+.footer-main {
+  align-items: center;
+}
+
+.footer-lang {
+  margin-left: auto;
+  font-size: 12px;
+}
+
+@media (max-width: 480px) {
+  /* une hiérarchie simple : titre → horloge + email → liens → bandeau */
+  .footer-icon {
+    display: none;
+  }
+
   .footer-cta {
-    padding: 72px var(--gutter) 28px;
+    padding: 64px var(--gutter) 26px;
   }
 
   .footer-title {
-    font-size: clamp(34px, 10vw, 44px);
+    font-size: clamp(40px, 12.5vw, 54px);
   }
 
-  .footer-icon img {
-    width: 64px;
+  .footer-info {
+    flex-wrap: nowrap;
+    align-items: flex-end;
   }
 
-  .footer-mark {
-    display: block;
-    padding: 12px var(--gutter) 22px;
-    line-height: 0;
+  .footer-clock {
+    font-size: 12px;
+    white-space: normal;
   }
 
-  .footer-mark img {
-    width: 100%;
-    height: auto;
+  .footer-info .footer-mail {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    font-size: 14px;
   }
 
   .footer-main {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 14px 20px;
-    padding: 0 var(--gutter) 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 20px var(--gutter) 16px;
+    border-top: 1px solid rgba(255, 255, 255, .18);
     color: var(--white);
-    font-size: 13px;
   }
 
   .footer-links {
-    flex-direction: column;
-    gap: 6px;
-    text-align: right;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    font-size: 12px;
+    text-align: left;
+  }
+
+  .footer-lang {
+    margin-left: 0;
   }
 
   .footer-meta {
-    grid-column: 1 / -1;
     opacity: .55;
     font-size: 11px;
   }
 
   .footer .e1-marquee-text {
-    font-size: 34px;
-    color: var(--white);
+    font-size: 26px;
   }
 }
 
@@ -4423,5 +4659,855 @@ html.egg-open .float-cta.is-visible {
   *::before,
   *::after {
     transition-duration: .01ms !important;
+  }
+}
+
+
+/* =========================================================
+   V5 — le saladier, la carte du jour, la sonnette
+   ========================================================= */
+
+/* --- Mots cliquables : les bons ingrédients, la bonne recette --- */
+[data-ingredients],
+[data-recipe] {
+  cursor: pointer;
+}
+
+.approche-text b[data-ingredients]:hover,
+.approche-text b[data-ingredients]:focus-visible,
+.approche-text b[data-recipe]:hover,
+.approche-text b[data-recipe]:focus-visible {
+  text-decoration: underline wavy var(--pen) 1px;
+  text-underline-offset: 3px;
+  outline: none;
+}
+
+/* --- Hero (desktop) : le CTA à droite, sur la ligne du statement --- */
+@media (min-width: 481px) {
+  .hero-say {
+    bottom: clamp(50px, 4vw, 70px);
+  }
+
+  .hero-cta {
+    left: auto;
+    right: var(--gutter);
+    bottom: clamp(50px, 4vw, 70px);
+  }
+}
+
+/* --- Fiche chef (desktop, souris) : à droite, sur la brigade --- */
+.chef-body .crew-body {
+  transform: translateX(3.85%); /* le buste sous le centre de la tête */
+}
+
+@media (min-width: 901px) {
+  .chef.is-peek .chef-bubble {
+    inset: 0 0 0 auto;
+    width: var(--peek-w, 46vw);
+    box-shadow: -18px 0 40px -18px rgba(0, 0, 0, .35);
+    animation: e1-peek-r 380ms var(--ease);
+  }
+
+  .chef.is-peek .chef-layout {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 18px;
+    min-height: 0;
+    padding-top: 8px;
+  }
+
+  .chef.is-peek .chef-visual {
+    display: flex;
+    justify-content: center;
+  }
+
+  .chef.is-peek .chef-figure {
+    width: min(52%, 250px);
+    margin: 0 auto;
+  }
+
+  .chef.is-peek .chef-portrait {
+    width: 62%;
+  }
+
+  .chef.is-peek .chef-id {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .chef.is-peek .chef-aka-line {
+    justify-content: center;
+  }
+}
+
+@keyframes e1-peek-r {
+  from { transform: translateX(24px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+
+/* --- Footer : la sonnette remplace le logo --- */
+.footer-title .i-bell {
+  display: none;
+}
+
+.footer-bell-wrap {
+  position: relative;
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.footer-bell {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--white);
+  line-height: 0;
+  cursor: pointer;
+  transform-origin: 50% 90%;
+}
+
+.footer-bell svg {
+  display: block;
+  width: clamp(84px, 8.5vw, 150px);
+  height: auto;
+}
+
+.footer-bell:hover,
+.footer-bell.is-ringing {
+  animation: e1-ring 460ms ease-in-out;
+}
+
+.footer-bell:focus-visible {
+  outline: 2px solid var(--fluo);
+  outline-offset: 6px;
+}
+
+.footer-bell-note {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  margin: 0;
+  color: var(--fluo);
+  font-family: var(--font-hand);
+  font-size: clamp(20px, 1.8vw, 28px);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  transform: rotate(-4deg);
+  pointer-events: none;
+}
+
+/* --- Email : un appui = copié --- */
+.footer-mail a[data-copy] {
+  position: relative;
+  cursor: copy;
+}
+
+.footer-mail a.is-done::after {
+  content: attr(data-done) " ✓";
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 4px);
+  color: var(--fluo);
+  font-family: var(--font-hand);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  transform: rotate(-3deg);
+}
+
+@media (max-width: 480px) {
+  .footer-bell svg {
+    width: 64px;
+  }
+  .footer-bell-note {
+    font-size: 19px;
+  }
+}
+
+/* --- Formulaire : la recette --- */
+
+
+
+#e1-ingredients {
+  min-height: 112px;
+}
+
+/* Sonnette (mobile) : la note au stylo ne mord plus sur le titre */
+@media (max-width: 480px) {
+  .footer-bell-note {
+    right: -4px;
+    bottom: calc(100% + 2px);
+    font-size: 16px;
+    transform: rotate(-6deg);
+  }
+}
+
+
+/* =========================================================
+   V8 — plus clair : ce qu'on fait, pourquoi, comment
+   ========================================================= */
+
+/* --- Hero : la phrase concrète, les 3 piliers, 2 CTA --- */
+.hero-sub {
+  max-width: 44em;
+  margin-top: clamp(12px, 1.1vw, 18px);
+  font-family: var(--font-text);
+  font-size: clamp(13px, 1.05vw, 17px);
+  line-height: 1.4;
+}
+
+.hero-pillars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .2em .6em;
+  margin-top: clamp(10px, .9vw, 14px);
+  font-family: var(--font-title);
+  font-size: clamp(13px, 1.1vw, 18px);
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.hero-discover {
+  display: inline-flex;
+  align-items: center;
+  gap: .45em;
+  margin-top: clamp(14px, 1.3vw, 22px);
+  padding-bottom: 3px;
+  border-bottom: 1.5px solid currentColor;
+  font-family: var(--font-title);
+  font-size: clamp(12px, .95vw, 15px);
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.hero-discover .i-down {
+  width: 1em;
+  height: 1em;
+  transition: transform var(--t-fast) var(--ease);
+}
+
+.hero-discover:hover .i-down {
+  transform: translateY(3px);
+}
+
+@media (max-width: 480px) {
+  .hero-sub {
+    font-size: 13px;
+  }
+  .hero-pillars {
+    font-size: 13px;
+  }
+  .hero-discover {
+    font-size: 12px;
+  }
+}
+
+/* --- Expertises : les grands territoires --- */
+#expertises-list .expertises li.xp-group {
+  display: flex;
+  align-items: baseline;
+  gap: .6em;
+  margin-top: 1.1em;
+  padding-bottom: .35em;
+  border-bottom: 1px solid var(--black);
+  font-family: var(--font-title);
+  font-size: clamp(12px, .95vw, 15px);
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+#expertises-list .expertises li.xp-group:first-child {
+  margin-top: 0;
+}
+
+.xp-group-n {
+  padding: 1px 5px 0;
+  background: var(--fluo);
+  font-size: .9em;
+  letter-spacing: .02em;
+}
+
+/* --- La brigade : le collectif en une phrase --- */
+.brigade-intro {
+  margin-bottom: clamp(14px, 1.4vw, 22px);
+  font-family: var(--font-title);
+  font-size: clamp(16px, 1.3vw, 21px);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* --- Formulaire : « Où en êtes-vous ? » --- */
+.e1-stage {
+  margin-bottom: 4px;
+}
+
+.e1-urgent input:checked + span {
+  background: var(--pen);
+  border-color: var(--pen);
+  color: var(--white);
+}
+
+
+/* =========================================================
+   V9 — le manifeste (fond noir, logo blanc) · méthode « livrables »
+   ========================================================= */
+
+/* ordre d'empilement : … brigade → manifeste → méthode → footer */
+.why          { z-index: 4; }
+.method,
+.js .method   { z-index: 5; }
+
+.why {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+  min-height: 100svh;
+  padding: clamp(28px, 3vw, 52px) var(--gutter) clamp(24px, 2.6vw, 44px);
+  overflow: hidden;
+  background: var(--black);
+  color: var(--white);
+  box-shadow: 0 -18px 40px -14px rgba(0, 0, 0, .45);
+}
+
+/* le texte en haut à gauche, en Courier, comme sur la carte */
+.why-text {
+  position: relative;
+  z-index: 1;
+  max-width: 44em;
+  font-family: var(--font-text);
+  font-size: clamp(15px, 1.45vw, 24px);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.why-text b {
+  padding: 0 .12em;
+  background: var(--fluo);
+  color: var(--black);
+}
+
+/* le logo, énorme, au centre */
+.why-logo {
+  align-self: center;
+  justify-self: center;
+  width: min(92%, 1400px);
+  height: auto;
+  margin: clamp(24px, 4vw, 60px) 0;
+}
+
+/* l'icône déborde sur le texte, comme le dessin de la référence */
+.why-icon {
+  position: absolute;
+  top: clamp(40px, 5vw, 80px);
+  right: clamp(24px, 8vw, 150px);
+  z-index: 2;
+  width: clamp(110px, 15vw, 250px);
+  height: auto;
+  transform: rotate(8deg);
+}
+
+/* les 4 mots en bas : gauche · centre · centre · droite */
+.why-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-text);
+  font-size: clamp(12px, 1.1vw, 18px);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+@media (max-width: 900px) {
+  .why-text {
+    max-width: 68%;
+  }
+}
+
+@media (max-width: 480px) {
+  .why {
+    padding: 64px var(--gutter) 28px;
+  }
+  .why-text {
+    max-width: 74%;
+    font-size: 14px;
+  }
+  .why-icon {
+    top: 48px;
+    right: -6px;
+    width: 92px;
+  }
+  .why-logo {
+    width: 100%;
+  }
+  .why-row {
+    flex-wrap: wrap;
+    font-size: 11px;
+  }
+}
+
+/* --- Méthode : ce que vous recevez à chaque étape --- */
+.step-get {
+  display: block;
+  margin-top: .6em;
+  font-weight: 700;
+}
+
+/* =========================================================
+   V10 — moins de texte, expertises sans traits, manifeste centré
+   ========================================================= */
+
+/* expertises : les territoires sans trait de séparation */
+#expertises-list .expertises li.xp-group {
+  padding-bottom: .15em;
+  border-bottom: 0;
+}
+
+/* manifeste : le texte au centre, l'icône seule à droite */
+.why {
+  grid-template-rows: 1fr auto;
+}
+
+.why-text {
+  align-self: center;
+  justify-self: center;
+  max-width: 30em;
+  font-size: clamp(18px, 2vw, 32px);
+  line-height: 1.4;
+  text-align: center;
+}
+
+.why-icon {
+  top: 50%;
+  right: var(--gutter);
+  width: clamp(110px, 13vw, 220px);
+  transform: translateY(-60%) rotate(8deg);
+}
+
+@media (max-width: 1100px) {
+  .why-text {
+    max-width: 22em;
+  }
+}
+
+@media (max-width: 900px) {
+  .why-text {
+    max-width: 100%;
+    padding: 0 12%;
+  }
+  .why-icon {
+    width: 90px;
+  }
+}
+
+@media (max-width: 480px) {
+  .why-text {
+    max-width: 100%;
+    padding: 0 22% 0 0;
+    font-size: 16px;
+    text-align: center;
+  }
+  .why-icon {
+    top: 50%;
+    right: -8px;
+    width: 72px;
+    transform: translateY(-50%) rotate(8deg);
+  }
+}
+
+/* manifeste sans logo : le texte a toute la largeur */
+@media (max-width: 480px) {
+  .why-text {
+    padding: 0;
+  }
+}
+
+/* manifeste : bloc centré, texte aligné à gauche (colonne éditoriale, beaucoup de vide autour) */
+.why-text,
+.why-text {
+  text-align: left;
+}
+
+@media (max-width: 480px) {
+  .why-text {
+    text-align: left;
+    max-width: 88%;
+  }
+}
+
+/* Brigade (mobile) : « Voir la fiche » de retour sous chaque chef */
+@media (max-width: 900px) {
+  .sec-brigade .member-more {
+    display: inline-flex;
+    grid-column: 2;
+    justify-self: start;
+    margin-top: 8px;
+    padding: 7px 10px 6px;
+    border: 1.5px solid var(--black);
+    font-size: 11px;
+  }
+}
+
+/* manifeste : les 4 mots du bas sur une grille éditoriale (4 colonnes égales, numérotées) */
+.why-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px clamp(16px, 2vw, 32px);
+  padding-top: clamp(14px, 1.4vw, 22px);
+  counter-reset: why;
+  letter-spacing: .12em;
+}
+
+.why-row li {
+  counter-increment: why;
+}
+
+.why-row li::before {
+  content: counter(why, decimal-leading-zero);
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 400;
+  letter-spacing: .04em;
+  opacity: .45;
+}
+
+@media (max-width: 480px) {
+  .why-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 16px;
+    letter-spacing: .1em;
+  }
+}
+
+
+/* =========================================================
+   V15 — DESKTOP ÉDITORIAL
+   Références : Accordion (mot géant pleine largeur, étiquettes
+   entre parenthèses), adcker (index (01) discrets), Rue / Dazed
+   (contraste d'échelle). Bloc isolé : le retirer = revenir à la v14.
+   ========================================================= */
+
+/* étiquette du manifeste : « ( POURQUOI EVERY1.ATE ) » en haut à gauche */
+.why-label {
+  position: absolute;
+  top: clamp(24px, 2.6vw, 44px);
+  left: var(--gutter);
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  opacity: .6;
+}
+.why-label::before { content: "( "; }
+.why-label::after  { content: " )"; }
+
+@media (min-width: 901px) {
+
+  /* --- index de section « ( 01 ) » au-dessus des titres --- */
+  #approche .sec-label::before,
+  #expertises-list .sec-label::before,
+  #brigade-grid .sec-label::before,
+  #method-title::before {
+    display: block;
+    margin-bottom: .7em;
+    font-family: var(--font-text);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: .12em;
+    opacity: .5;
+  }
+  #approche .sec-label::before       { content: "( 01 )"; }
+  #expertises-list .sec-label::before { content: "( 02 )"; }
+  #brigade-grid .sec-label::before    { content: "( 03 )"; }
+
+  /* --- méthode : le mot géant, pleine largeur (Accordion) --- */
+  .method-head {
+    display: block;
+  }
+
+  #method-title {
+    margin: 0;
+    font-size: clamp(76px, 10.4vw, 188px);
+    line-height: .84;
+    letter-spacing: -.045em;
+    white-space: nowrap;
+  }
+  #method-title::before {
+    content: "( 05 )";
+    margin-bottom: 1.6em;
+    letter-spacing: .12em;
+  }
+
+  .method-intro-wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: clamp(40px, 6vw, 110px);
+    margin-top: clamp(22px, 2.4vw, 40px);
+  }
+  .method-intro {
+    grid-column: 2;
+    max-width: 44ch;
+  }
+  .method-intro-wrap .note-method {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .js .method-pin .method-steps {
+    margin-top: clamp(28px, 3.4vw, 56px);
+  }
+}
+
+@media (min-width: 901px) {
+  /* le mot géant occupe exactement la largeur utile (bord à bord des marges) */
+  #method-title {
+    font-size: calc((100vw - 2 * var(--gutter)) / 8.19);
+  }
+  html[lang="en"] #method-title {
+    font-size: calc((100vw - 2 * var(--gutter)) / 6.4);
+  }
+}
+
+
+
+/* =========================================================
+   V17 — retours sur la version publiée
+   ========================================================= */
+
+/* 2. plus d'empilement : les sections se suivent simplement, sans zone blanche */
+.js .stack-card,
+.js .details-wrap .stack-card,
+.js .details-wrap.stack-card {
+  position: relative;
+  top: auto;
+}
+.stack-hold,
+.stack-hold-m {
+  display: none !important;
+}
+main.stack-card,
+.footer.stack-card,
+.card-details,
+.method,
+.sec-brigade,
+.why,
+.details-wrap {
+  box-shadow: none;
+}
+
+/* 7. méthode : plus de carte figée au scroll, ouverture au clic */
+.js .method {
+  height: auto;
+}
+.js .method-pin {
+  position: relative;
+  top: auto;
+  min-height: 0;
+}
+.step-btn {
+  cursor: pointer;
+}
+.step:not(.is-active) .step-btn:hover .step-name {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* 1. vidéo bloquée : l'image animée prend le relais (pas de bouton lecture) */
+.hero-video::-webkit-media-controls-panel,
+.hero-video::-webkit-media-controls-play-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+.hero-stage {
+  background: #000 url("assets/web/hero-poster.jpg") center / cover no-repeat;
+}
+.hero.video-blocked .hero-video {
+  visibility: hidden;
+}
+.hero.video-blocked .hero-stage {
+  background-image: url("assets/web/hero-desktop.webp");
+}
+@media (max-width: 480px) {
+  .hero-stage {
+    background-image: url("assets/web/hero-poster-mobile.jpg");
+  }
+  .hero.video-blocked .hero-stage {
+    background-image: url("assets/web/hero-mobile.webp");
+  }
+}
+
+/* 3. coup de feu : fond blanc plein écran, l'animation se lit bien */
+html.is-rush body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 944;
+  background: var(--white);
+  pointer-events: none;
+  animation: e1-rush-white 220ms ease both;
+}
+@keyframes e1-rush-white {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* 4. expertises : les mots importants surlignés */
+.xp-desc mark {
+  padding: 0 .1em;
+  background: var(--fluo);
+  color: inherit;
+}
+
+/* 5. un seul lien, discret, sous la liste (plus de bouton sur chaque ligne) */
+.xp-one-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: .4em;
+  margin-top: clamp(16px, 1.6vw, 24px);
+  padding: 0 0 3px;
+  border: 0;
+  border-bottom: 1.5px solid currentColor;
+  background: none;
+  color: var(--black);
+  font-family: var(--font-title);
+  font-size: clamp(12px, .95vw, 14px);
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.xp-one-cta .i-arrow {
+  width: .85em;
+  height: .85em;
+  transition: transform var(--t-fast) var(--ease);
+}
+.xp-one-cta:hover .i-arrow {
+  transform: translate(2px, -2px);
+}
+#expertises-list .note-egg {
+  display: block;
+  margin-top: 14px;
+}
+
+/* D. expertises : plus d'animation d'apparition au scroll */
+#expertises-list [data-reveal],
+#expertises-list .sec-content[data-reveal] {
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+/* 6. fiche chef : les étapes et ingrédients ne ressemblent plus à des boutons */
+.chef-cycle li,
+.chef-cycle li.is-current,
+.chef.is-peek .chef-cycle li {
+  background: none !important;
+  color: var(--black) !important;
+  border: 0 !important;
+  border-bottom: 1px dotted rgba(0, 0, 0, .3) !important;
+  opacity: .38;
+}
+.chef-cycle li.is-current {
+  opacity: 1;
+}
+.chef-cycle li.is-current b::before {
+  content: "● ";
+  color: var(--pen);
+}
+.chef-stat-list {
+  display: block !important;
+}
+.chef-stat-list li {
+  display: inline !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  font-family: var(--font-text);
+  font-size: 13px;
+  text-transform: none;
+}
+.chef-stat-list li + li::before {
+  content: " · ";
+}
+
+/* 8. sonnette & boutons : pas de zoom au double appui */
+button,
+a,
+label,
+[role="button"],
+.footer-bell,
+[data-ring] {
+  touch-action: manipulation;
+}
+
+/* 10. bandeau du footer : texte plus petit, défilement plus vif */
+.footer .e1-marquee-text {
+  font-size: clamp(14px, 1.2vw, 19px);
+}
+.footer .e1-marquee-track {
+  animation-duration: 38s;
+}
+@media (max-width: 480px) {
+  .footer .e1-marquee-text {
+    font-size: 15px;
+    padding-right: 10vw;
+  }
+  .footer .e1-marquee-track {
+    animation-duration: 28s;
+  }
+}
+
+
+/* =========================================================
+   V19 — passe éditoriale : plus d'air (desktop) · formulaire aéré
+   ========================================================= */
+@media (min-width: 901px) {
+  .details-wrap {
+    column-gap: clamp(64px, 7vw, 140px);
+    padding-top: clamp(84px, 8vw, 150px);
+    padding-left: clamp(48px, 5vw, 96px);
+    padding-right: clamp(48px, 5vw, 96px);
+  }
+  .details-wrap .lead {
+    margin-bottom: 1.4em;
+  }
+  .details-wrap .approche-text {
+    line-height: 1.7;
+  }
+  .details-wrap .approche-text + .approche-text {
+    margin-top: 1.4em;
+  }
+}
+
+#e1-project-form .e1-field.e1-full {
+  margin-top: 18px;
+}
+.e1-stage {
+  margin-bottom: 18px;
+}
+.e1-services-header {
+  margin-bottom: 14px;
+}
+
+/* lien unique des expertises : une seule ligne, aligné à gauche */
+.xp-one-cta {
+  text-align: left;
+  white-space: nowrap;
+  letter-spacing: .02em;
+}
+@media (min-width: 901px) {
+  .xp-one-cta {
+    font-size: clamp(10.5px, .78vw, 13px);
   }
 }

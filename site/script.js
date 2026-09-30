@@ -11,6 +11,55 @@
 (function () {
   "use strict";
 
+  /* =======================================================
+     0. LANGUE — tous les textes affichés par le script
+     ======================================================= */
+
+  var LANG = document.documentElement.lang === "en" ? "en" : "fr";
+  /* dossier assets/ relatif au script (la version EN vit dans /en/) */
+  var ASSETS = (document.currentScript ? document.currentScript.src : location.href).replace(/[^/]*$/, "") + "assets/";
+  var T = {
+    fr: {
+      copied: "Copié", copy: "Copier", copiedToast: "Email copié. À très vite.",
+      cta: "Parlons de votre projet",
+      rushDone: "Service terminé. On vous écoute ?",
+      rain: "Attention, ça glisse !",
+      cleared: "Table débarrassée. Merci !",
+      bell: "Sonnez 3 fois", bellAgain: "Encore", bellDone: "Service ! On vous écoute.",
+      saltTap: "cliquez pour saler", saltTouch: "touchez l’écran pour saler",
+      saltDone: "Chaque marque a son dosage. Le vôtre ?",
+      allTasted: "Vous avez tout goûté. On se fait un café ?",
+      ticket: "BON N° ",
+      send: "Envoyer", sending: "Envoi", sent: "Envoyé", retry: "Réessayer",
+      open: "La cuisine est ouverte", openShort: "Cuisine ouverte",
+      rest: "La cuisine se repose, les commandes restent ouvertes", restShort: "Commandes ouvertes",
+      bellHint: "sonnez 3 fois ↓",
+    },
+    en: {
+      copied: "Copied", copy: "Copy", copiedToast: "Email copied. Talk soon.",
+      cta: "Let’s talk about your project",
+      rushDone: "Service’s over. Your turn?",
+      rain: "Careful, it’s slippery!",
+      cleared: "Table cleared. Thanks!",
+      bell: "Ring 3 times", bellAgain: "Again", bellDone: "Service! We’re listening.",
+      saltTap: "click to season", saltTouch: "tap the screen to season",
+      saltDone: "Every brand has its own dose. What’s yours?",
+      allTasted: "You’ve tasted everything. Coffee?",
+      ticket: "ORDER NO. ",
+      send: "Send", sending: "Sending", sent: "Sent", retry: "Try again",
+      open: "The kitchen is open", openShort: "Kitchen open",
+      rest: "The kitchen is resting, orders stay open", restShort: "Orders open",
+      bellHint: "ring 3 times ↓",
+    }
+  }[LANG];
+
+  /* Le moment de la journée, comme dans une cuisine (heure de Paris) :
+     on reste toujours ouverts aux projets, seul le moment change */
+  var MOMENTS = {
+    fr: [[0, "service de nuit"], [120, "grand nettoyage"], [270, "inventaire"], [360, "relève du matin"], [450, "mise en place"], [690, "coup de feu du midi"], [855, "nettoyage & relève"], [930, "service continu"], [1110, "rush du soir"], [1320, "derniers tickets"], [1410, "service de nuit"]],
+    en: [[0, "night service"], [120, "deep clean"], [270, "stock check"], [360, "morning shift"], [450, "prep time"], [690, "lunch rush"], [855, "clean-up & handover"], [930, "all-day service"], [1110, "dinner rush"], [1320, "last orders"], [1410, "night service"]]
+  }[LANG];
+
 
   /* =======================================================
      1. HORLOGE PARIS — met à jour tous les [data-paris-clock]
@@ -31,9 +80,22 @@
       clocks[i].textContent = "PARIS, FR  " + time;
     }
 
+    var min = parseInt(time.slice(0, 2), 10) * 60 + parseInt(time.slice(3, 5), 10);
+
+    // Top bar : « La cuisine est ouverte · coup de feu du midi »
+    var moment = MOMENTS[0][1];
+    MOMENTS.forEach(function (m) { if (min >= m[0]) moment = m[1]; });
+    var resting = min >= 120 && min < 360;
+    document.querySelectorAll(".open-label").forEach(function (el) {
+      var html = el.hasAttribute("data-short")
+        ? (resting ? T.restShort : T.openShort)
+        : (resting ? T.rest : T.open + '<span class="open-moment"><span class="open-sep"> · </span>' + moment + "</span>");
+      if (el.innerHTML !== html) el.innerHTML = html;
+    });
+
     // La brigade vit au rythme d'une cuisine : dort la nuit,
     // somnole au petit matin, s'agite aux heures de service
-    var shift = shiftAt(parseInt(time.slice(0, 2), 10) * 60 + parseInt(time.slice(3, 5), 10));
+    var shift = shiftAt(min);
     if (document.documentElement.getAttribute("data-shift") !== shift) {
       document.documentElement.setAttribute("data-shift", shift);
     }
@@ -223,7 +285,11 @@
     var mainEl = document.getElementById("main");
     var ctaRect = heroCta.getBoundingClientRect();
     var covered = mainEl.getBoundingClientRect().top < ctaRect.bottom + 8;
-    var hide = footerEl.getBoundingClientRect().top < window.innerHeight * 0.85 ||
+    // le CTA flottant s'efface sur le manifeste (fond noir) et au footer
+    var whyEl = document.getElementById("pourquoi");
+    var whyRect = whyEl && whyEl.getBoundingClientRect();
+    var onWhy = whyRect && whyRect.top < window.innerHeight * 0.5 && whyRect.bottom > window.innerHeight * 0.5;
+    var hide = footerEl.getBoundingClientRect().top < window.innerHeight * 0.85 || onWhy ||
                document.body.classList.contains("e1-form-open");
     var next = !covered ? "hero" : (hide ? "hidden" : "float");
     if (next === ctaState) return;
@@ -289,17 +355,25 @@
   // d'énergie), on la relance au premier toucher, sans afficher de bouton.
   if (video) {
     video.muted = true;
+    video.defaultMuted = true;
+    var gestures = ["click", "touchend", "keydown"];
+    var onGesture = function () { tryPlay(); };
+    var playing = function () {
+      gestures.forEach(function (evt) { window.removeEventListener(evt, onGesture); });
+      hero.classList.remove("video-blocked");
+    };
     var tryPlay = function () {
       var play = video.play();
-      if (play && typeof play.catch === "function") play.catch(function () {});
+      if (play && typeof play.then === "function") play.then(playing).catch(function () {});
     };
+    video.addEventListener("playing", playing);
+    gestures.forEach(function (evt) { window.addEventListener(evt, onGesture, { passive: true }); });
     tryPlay();
-    ["touchstart", "pointerdown", "scroll"].forEach(function (evt) {
-      window.addEventListener(evt, function once() {
-        if (video.paused) tryPlay();
-        window.removeEventListener(evt, once);
-      }, { passive: true });
-    });
+    // toujours à l'arrêt après 1,2 s (mode économie d'énergie, économiseur de données…)
+    // → l'image animée prend le relais, sans bouton « lecture »
+    setTimeout(function () {
+      if (video.paused) hero.classList.add("video-blocked");
+    }, 1200);
   }
 
 
@@ -564,8 +638,25 @@
   }
 
   document.querySelectorAll("[data-to-brigade]").forEach(function (el) {
-    el.addEventListener("click", scrollToBrigade);
+    el.addEventListener("click", function (event) {
+      // mobile : le logo du centre fait glisser vers « Notre approche »
+      if (mqMobile.matches) { scrollToApproach(event); return; }
+      scrollToBrigade(event);
+    });
   });
+
+  function scrollToApproach(event) {
+    if (event) event.preventDefault();
+    window.scrollTo({ top: hero.offsetHeight, behavior: mqReduce.matches ? "auto" : "smooth" });
+  }
+
+  // « Découvrir notre approche » : on glisse juste après le hero
+  document.querySelectorAll("[data-to-approach]").forEach(function (el) {
+    el.addEventListener("click", scrollToApproach);
+  });
+
+  var mIcon = document.querySelector(".m-icon");
+  if (mIcon) mIcon.addEventListener("click", function (event) { if (mqMobile.matches) scrollToApproach(event); });
 
 
   /* =======================================================
@@ -576,8 +667,9 @@
   var toastTimer = null;
 
   // action (optionnelle) : { label, onClick } → petit bouton dans la notification
-  function toast(message, action) {
+  function toast(message, action, delay) {
     if (!toastEl) return;
+    if (delay) { setTimeout(function () { toast(message, action); }, delay); return; }
     toastEl.textContent = message;
     toastEl.classList.toggle("has-action", !!action);
     if (action) {
@@ -592,37 +684,46 @@
       toastEl.appendChild(btn);
     }
     toastEl.classList.add("is-visible");
+    toastY = window.scrollY;
+    toastAt = Date.now();
     clearTimeout(toastTimer);
     toastTimer = setTimeout(function () {
       toastEl.classList.remove("is-visible", "has-action");
     }, action ? 5000 : 2400);
   }
 
+  var toastY = 0, toastAt = 0;
+  function hideToast() {
+    if (!toastEl || !toastEl.classList.contains("is-visible")) return;
+    clearTimeout(toastTimer);
+    toastEl.classList.remove("is-visible", "has-action");
+  }
+  // un scroll ou un clic ailleurs sur l'écran → la notification s'efface
+  window.addEventListener("scroll", function () {
+    if (Math.abs(window.scrollY - toastY) > 30) hideToast();
+  }, { passive: true });
+  document.addEventListener("pointerdown", function (event) {
+    if (Date.now() - toastAt < 250) return;
+    if (toastEl && !toastEl.contains(event.target)) hideToast();
+  });
+
 
   /* =======================================================
      COPIER L'EMAIL
      ======================================================= */
 
-  document.querySelectorAll("[data-copy]").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      var value = btn.getAttribute("data-copy");
-      var done = function () {
-        btn.textContent = "Copié";
-        btn.classList.add("is-done");
-        toast("Email copié. À très vite.");
-        setTimeout(function () {
-          btn.textContent = "Copier";
-          btn.classList.remove("is-done");
-        }, 1800);
-      };
-
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(value).then(done, function () {
-          window.location.href = "mailto:" + value;
-        });
-      } else {
-        window.location.href = "mailto:" + value;
-      }
+  document.querySelectorAll("[data-copy]").forEach(function (link) {
+    link.setAttribute("data-done", T.copied);
+    link.addEventListener("click", function (event) {
+      var value = link.getAttribute("data-copy");
+      if (!navigator.clipboard || !navigator.clipboard.writeText) return; // → mailto
+      event.preventDefault();
+      navigator.clipboard.writeText(value).then(function () {
+        link.classList.add("is-done");
+        setTimeout(function () { link.classList.remove("is-done"); }, 1800);
+      }, function () {
+        window.location.href = link.getAttribute("href");
+      });
     });
   });
 
@@ -677,8 +778,78 @@
     setTimeout(function () { busy = false; }, duration);
   }
 
+  /* --- La salière : on assaisonne soi-même (clic / toucher) --- */
+  var saltEl = document.querySelector(".salt");
+  var shaker = saltEl && saltEl.querySelector(".salt-shaker");
+  var saltPinches = 0;
+  var saltIdle = null;
+
+  function placeShaker(x, y) {
+    shaker.style.transform = "translate(" + (x - 20) + "px," + (y - 60) + "px)";
+  }
+
+  function sprinkle(x, y) {
+    shaker.classList.remove("is-shaking");
+    void shaker.offsetWidth;
+    shaker.classList.add("is-shaking");
+    for (var i = 0; i < 9; i++) {
+      var g = document.createElement("span");
+      g.className = "salt-grain";
+      g.style.left = (x - 2 + (Math.random() * 14 - 7)) + "px";
+      g.style.top = (y - 6) + "px";
+      saltEl.appendChild(g);
+      var anim = g.animate([
+        { transform: "translate(0,0)", opacity: 1 },
+        { transform: "translate(" + (Math.random() * 50 - 25) + "px," + (60 + Math.random() * 90) + "px)", opacity: 0 }
+      ], { duration: 700 + Math.random() * 400, easing: "cubic-bezier(.3,0,.8,.6)", fill: "forwards" });
+      anim.onfinish = (function (el) { return function () { el.remove(); }; })(g);
+    }
+    saltPinches += 1;
+    if (saltPinches === 6) stopSalt(true);
+    else armSaltIdle();
+  }
+
+  function armSaltIdle() {
+    clearTimeout(saltIdle);
+    saltIdle = setTimeout(function () { stopSalt(false); }, 6000);
+  }
+
+  function onSaltMove(event) { placeShaker(event.clientX, event.clientY); }
+  function onSaltDown(event) {
+    event.preventDefault();
+    placeShaker(event.clientX, event.clientY);
+    sprinkle(event.clientX, event.clientY);
+  }
+  function onSaltKey(event) { if (event.key === "Escape") stopSalt(false); }
+
+  function startSalt() {
+    if (!saltEl || saltEl.classList.contains("is-on")) return;
+    saltPinches = 0;
+    saltEl.querySelector(".salt-hint-action").textContent = canHover ? T.saltTap : T.saltTouch;
+    placeShaker(window.innerWidth / 2, window.innerHeight * 0.55);
+    saltEl.classList.add("is-on");
+    syncEgg();
+    saltEl.addEventListener("pointermove", onSaltMove);
+    saltEl.addEventListener("pointerdown", onSaltDown);
+    document.addEventListener("keydown", onSaltKey);
+    armSaltIdle();
+  }
+
+  function stopSalt(done) {
+    if (!saltEl) return;
+    clearTimeout(saltIdle);
+    saltEl.removeEventListener("pointermove", onSaltMove);
+    saltEl.removeEventListener("pointerdown", onSaltDown);
+    document.removeEventListener("keydown", onSaltKey);
+    setTimeout(function () {
+      saltEl.classList.remove("is-on");
+      syncEgg();
+      // le message arrive une fois la salière rangée
+      if (done) toast(T.saltDone, { label: T.cta, onClick: openFormNow }, 250);
+    }, done ? 800 : 0);
+  }
+
   /* --- La cloche du service : sonnez 3 fois, la commande part --- */
-  var bellEl = document.querySelector(".bell");
   var bellRings = 0;
   var audioCtx = null;
 
@@ -726,16 +897,9 @@
     } catch (e) {}
   }
 
-  function setBell(open) {
-    if (!bellEl) return;
-    bellEl.classList.toggle("is-open", open);
-    bellEl.setAttribute("aria-hidden", open ? "false" : "true");
-    syncEgg();
-  }
-
   // Un easter egg à l'écran → le CTA flottant s'efface (pas de superposition)
   function syncEgg() {
-    var on = !!document.querySelector(".bell.is-open, .plate-rain.is-tilt, .ticket.is-open");
+    var on = !!document.querySelector(".salt.is-on, .ticket.is-open");
     document.documentElement.classList.toggle("egg-open", on);
   }
 
@@ -753,157 +917,61 @@
       stopRush();
       busy = false;
     }
-    if (bellEl && bellEl.classList.contains("is-open")) setBell(false);
+    if (saltEl && saltEl.classList.contains("is-on")) stopSalt(false);
     closeTicket();
   }
 
+  // La sonnette du footer : 3 coups → le formulaire s'ouvre
+  var footerBell = document.querySelector(".footer-bell");
+  var bellNote = document.querySelector(".footer-bell-note");
+  var bellReset = null;
+
+  function ringBell() {
+    if (!footerBell || bellRings >= 3) return;
+    footerBell.classList.remove("is-ringing");
+    void footerBell.offsetWidth;
+    footerBell.classList.add("is-ringing");
+    ding();
+    bellRings += 1;
+    clearTimeout(bellReset);
+    if (bellRings < 3) {
+      if (bellNote) bellNote.textContent = T.bellAgain + " " + (3 - bellRings) + "…";
+      // on laisse 4 s pour enchaîner les 3 coups
+      bellReset = setTimeout(function () { bellRings = 0; if (bellNote) bellNote.textContent = ""; }, 4000);
+      return;
+    }
+    if (bellNote) bellNote.textContent = T.bellDone;
+    wake(faces, 150);
+    setTimeout(function () {
+      openFormNow();
+      bellRings = 0;
+      if (bellNote) bellNote.textContent = "";
+    }, 800);
+  }
+
+  document.querySelectorAll("[data-ring]").forEach(function (el) {
+    el.addEventListener("click", ringBell);
+  });
+
+  // Depuis la carte secrète : on descend jusqu'à la sonnette
   function startBell() {
-    if (!bellEl) return;
+    if (!footerBell) return;
     bellRings = 0;
-    bellEl.querySelector(".bell-text").textContent = "Sonnez 3 fois";
-    setBell(true);
-    bellEl.querySelector(".bell-btn").focus({ preventScroll: true });
+    footerBell.scrollIntoView({ block: "center", behavior: mqReduce.matches ? "auto" : "smooth" });
+    if (bellNote) bellNote.textContent = T.bellHint;
+    setTimeout(function () {
+      footerBell.classList.remove("is-ringing");
+      void footerBell.offsetWidth;
+      footerBell.classList.add("is-ringing");
+      footerBell.focus({ preventScroll: true });
+    }, 700);
   }
-
-  if (bellEl) {
-    bellEl.querySelector(".bell-btn").addEventListener("click", function () {
-      if (bellRings >= 3) return;
-      var btn = this;
-      btn.classList.remove("is-ringing");
-      void btn.offsetWidth;
-      btn.classList.add("is-ringing");
-      ding();
-      bellRings += 1;
-      var text = bellEl.querySelector(".bell-text");
-      if (bellRings < 3) {
-        text.textContent = "Encore " + (3 - bellRings);
-        return;
-      }
-      text.textContent = "Service ! On vous écoute.";
-      wake(faces, 150);
-      // 3 coups de sonnette = la commande part : on ouvre le formulaire
-      setTimeout(function () {
-        setBell(false);
-        openFormNow();
-      }, 900);
-    });
-    bellEl.querySelector(".bell-close").addEventListener("click", function () { setBell(false); });
-    document.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") setBell(false);
-    });
-  }
-
-  /* --- Pluie d'assiettes, version téléphone : on penche pour débarrasser --- */
-  var tiltOn = false;
 
   // Assiettes blanches sur fond noir (footer), noires sur fond blanc
   function plateSrc() {
     var f = document.getElementById("footer");
     var dark = f && f.getBoundingClientRect().top < window.innerHeight * 0.6;
-    return "assets/web/logo-icon-" + (dark ? "w" : "b") + ".webp";
-  }
-
-  function startTiltRain() {
-    if (tiltOn) return;
-    tiltOn = true;
-
-    var layer = document.createElement("div");
-    layer.className = "plate-rain is-tilt";
-    var hint = document.createElement("p");
-    hint.className = "tilt-hint";
-    hint.innerHTML = "Penchez le téléphone pour étaler les assiettes, puis vers la droite pour débarrasser" +
-      '<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"/></svg>';
-    layer.appendChild(hint);
-    document.body.appendChild(layer);
-    syncEgg();
-
-    var vw = window.innerWidth;
-    var vh = window.innerHeight;
-    var plates = [];
-    var src = plateSrc();
-    for (var i = 0; i < 18; i++) {
-      var img = document.createElement("img");
-      img.src = src;
-      img.alt = "";
-      var size = 44 + Math.random() * 40;
-      img.style.width = size + "px";
-      layer.appendChild(img);
-      plates.push({
-        el: img, size: size,
-        x: size / 2 + Math.random() * (vw - size),
-        y: -size - Math.random() * vh * 0.8,
-        vx: 0, vy: 0, r: Math.random() * 360,
-        floor: vh - size
-      });
-    }
-
-    // Gyroscope : iOS demande l'autorisation (dans le geste de l'utilisateur).
-    // gamma = gauche/droite, beta = avant/arrière → les assiettes glissent
-    // dans tous les sens ; elles ne sortent que par la droite.
-    var gamma = 0;
-    var beta = 60;
-    var gotTilt = false;
-    function onTilt(event) {
-      if (event.gamma === null) return;
-      gotTilt = true;
-      gamma = event.gamma;
-      beta = event.beta;
-    }
-    var D = window.DeviceOrientationEvent;
-    if (D && typeof D.requestPermission === "function") {
-      D.requestPermission().then(function (state) {
-        if (state === "granted") window.addEventListener("deviceorientation", onTilt);
-      }).catch(function () {});
-    } else if (D) {
-      window.addEventListener("deviceorientation", onTilt);
-    }
-
-    // Sans gyroscope : on glisse du doigt vers la droite
-    var push = 0;
-    var sx = null;
-    setTimeout(function () {
-      if (!gotTilt && tiltOn) hint.firstChild.textContent = "Glissez vers la droite pour débarrasser la table";
-    }, 2500);
-    layer.addEventListener("touchstart", function (e) { sx = e.touches[0].clientX; }, { passive: true });
-    layer.addEventListener("touchmove", function (e) {
-      if (sx === null) return;
-      var dx = e.touches[0].clientX - sx;
-      sx = e.touches[0].clientX;
-      if (dx > 0) push = Math.min(2.4, push + dx * 0.05);
-    }, { passive: true });
-    layer.addEventListener("touchend", function () { sx = null; });
-
-    var start = performance.now();
-    function frame(now) {
-      var auto = now - start > 30000 ? 1.2 : 0; // au bout de 30 s, la table se débarrasse seule
-      var rad = Math.PI / 180;
-      var ax = Math.sin(Math.max(-60, Math.min(60, gamma)) * rad) * 0.9 + push + auto;
-      var ay = Math.sin(Math.max(-60, Math.min(90, beta)) * rad) * 0.9;
-      push *= 0.9;
-      var left = 0;
-      plates.forEach(function (p) {
-        if (p.gone) return;
-        p.vx = (p.vx + ax) * 0.97;
-        p.vy = (p.vy + ay) * 0.97;
-        p.x += p.vx;
-        p.y += p.vy;
-        // bords : haut, bas et gauche rebondissent ; la droite débarrasse
-        if (p.y > p.floor) { p.y = p.floor; p.vy = -p.vy * 0.3; }
-        if (p.y < 0 && p.vy < 0 && p.y > -p.size) { p.y = 0; p.vy = -p.vy * 0.3; }
-        if (p.x < p.size / 2) { p.x = p.size / 2; p.vx = -p.vx * 0.3; }
-        p.r += p.vx * 1.6;
-        if (p.x - p.size / 2 > vw) { p.gone = true; p.el.remove(); return; }
-        left += 1;
-        p.el.style.transform = "translate(" + (p.x - p.size / 2).toFixed(1) + "px," + p.y.toFixed(1) + "px) rotate(" + p.r.toFixed(1) + "deg)";
-      });
-      if (left) { requestAnimationFrame(frame); return; }
-      window.removeEventListener("deviceorientation", onTilt);
-      layer.remove();
-      tiltOn = false;
-      syncEgg();
-      toast("Table débarrassée. Merci !");
-    }
-    requestAnimationFrame(frame);
+    return ASSETS + "web/logo-icon-" + (dark ? "w" : "b") + ".webp";
   }
 
   var eggs = {
@@ -923,7 +991,7 @@
         }, 600);
         rushTimer = setTimeout(function () {
           stopRush();
-          toast("Service terminé. On vous écoute ?", { label: "Parlons projet", onClick: openFormNow });
+          toast(T.rushDone, { label: T.cta, onClick: openFormNow }, 400);
         }, 5000);
       });
     },
@@ -932,7 +1000,7 @@
     plat: function () {
       var ticket = document.querySelector(".ticket");
       if (!ticket) return;
-      ticket.querySelector(".ticket-no").textContent = "BON N° " + String(Math.floor(Math.random() * 900) + 100);
+      ticket.querySelector(".ticket-no").textContent = T.ticket + String(Math.floor(Math.random() * 900) + 100);
       ticket.classList.add("is-open");
       ticket.setAttribute("aria-hidden", "false");
       ticketY = window.scrollY;
@@ -941,9 +1009,8 @@
 
     /* 3. PLUIE D'ASSIETTES — l'icône tombe par dizaines et rebondit */
     pluie: function () {
-      if (mqMobile.matches && !mqReduce.matches) { startTiltRain(); return; }
       exclusive(4000, function () {
-        if (mqReduce.matches) { toast("Attention, ça glisse !"); return; }
+        if (mqReduce.matches) { toast(T.rain); return; }
         var rain = document.createElement("div");
         rain.className = "plate-rain";
         var src = plateSrc();
@@ -971,17 +1038,19 @@
             fill: "both"
           });
         }
-        toast("Attention, ça glisse !");
-        setTimeout(function () { rain.remove(); }, 4000);
+        setTimeout(function () { rain.remove(); toast(T.rain); }, 3900);
       });
     },
 
     /* 4. LA CLOCHE DU SERVICE — sonnez 3 fois, la commande part */
-    cloche: function () { startBell(); }
+    cloche: function () { startBell(); },
+
+    /* 5. LA SALIÈRE — pas le même assaisonnement sur toutes les marques */
+    saliere: function () { startSalt(); }
   };
 
   /* --- Suivi des effets "goûtés" (mémorisé sur cet appareil) --- */
-  var MENU = ["rush", "plat", "cloche", "pluie"];
+  var MENU = ["rush", "plat", "saliere", "cloche"];
   var found = [];
   try { found = JSON.parse(localStorage.getItem("e1-eggs") || "[]"); } catch (e) { found = []; }
 
@@ -1005,7 +1074,7 @@
     renderCarte();
     if (found.length === MENU.length) {
       setTimeout(function () {
-        toast("Vous avez tout goûté. On se fait un café ?", { label: "Parlons projet", onClick: openFormNow });
+        toast(T.allTasted, { label: T.cta, onClick: openFormNow });
       }, 2600);
     }
   }
@@ -1055,6 +1124,32 @@
     if (link) link.click();
   }
 
+  var onKey = function (fn) {
+    return function (event) {
+      if (event.type === "keydown" && event.key !== "Enter" && event.key !== " ") return;
+      event.preventDefault();
+      fn();
+    };
+  };
+  // « les bons ingrédients » : on ouvre le formulaire sur le champ dédié
+  // (le saladier est gardé de côté pour plus tard : openBowl() n'est plus appelé)
+  document.querySelectorAll("[data-ingredients]").forEach(function (el) {
+    var go = onKey(function () {
+      openFormNow();
+      setTimeout(function () {
+        var field = document.getElementById("e1-ingredients");
+        if (!field) return;
+        field.scrollIntoView({ block: "center", behavior: mqReduce.matches ? "auto" : "smooth" });
+        field.focus({ preventScroll: true });
+        var box = field.closest(".e1-field");
+        box.classList.add("is-highlight");
+        setTimeout(function () { box.classList.remove("is-highlight"); }, 2400);
+      }, 480);
+    });
+    el.addEventListener("click", go);
+    el.addEventListener("keydown", go);
+  });
+
   // Clic (ou Entrée) sur les éléments marqués data-egg
   document.querySelectorAll("[data-egg]").forEach(function (el) {
     var trigger = function (event) {
@@ -1085,8 +1180,8 @@
     if (ticketEl && ticketEl.classList.contains("is-open") && Math.abs(window.scrollY - ticketY) > 40) closeTicket();
   }, { passive: true });
 
-  // Code secret ↑ ↑ ↓ ↓ : les 4 effets, chacun son tour
-  var konamiCycle = ["rush", "plat", "pluie", "cloche"];
+  // Code secret ↑ ↑ ↓ ↓ : les effets, chacun son tour
+  var konamiCycle = ["rush", "plat", "saliere", "cloche"];
   var konamiIndex = 0;
   var arrows = "";
 
@@ -1135,7 +1230,6 @@
 
     steps.forEach(function (st, k) {
       st.querySelector(".step-btn").addEventListener("click", function () { openStep(k); });
-      if (canHover) st.addEventListener("mouseenter", function () { openStep(k); });
       st.addEventListener("click", function () { openStep(k); });
     });
 
@@ -1151,8 +1245,8 @@
       }
     };
 
-    window.addEventListener("scroll", methodScroll, { passive: true });
-    window.addEventListener("resize", methodScroll);
+    // plus de pilotage au scroll : on ouvre une étape au clic uniquement
+    void methodScroll;
   }
 
 
@@ -1229,17 +1323,35 @@
     if (face) { blink(face); talk(face); }
   }
 
+  // Desktop (souris) : la fiche s'ouvre au survol d'un visage, par-dessus
+  // la colonne de la brigade, sans bloquer la page
+  var mqWide = window.matchMedia("(min-width: 901px)");
+  var hoverMode = function () { return canHover && mqWide.matches; };
+  var hoverClose = null;
+
   function openChef(i) {
     if (!chef) return;
+    clearTimeout(hoverClose);
     fillChef(i);
+    chef.classList.toggle("is-peek", hoverMode());
+    if (hoverMode()) {
+      // la fiche recouvre la colonne de la brigade (à droite)
+      var col = document.getElementById("brigade-grid");
+      if (col) bubble.style.setProperty("--peek-w", Math.max(460, window.innerWidth - col.getBoundingClientRect().left + 12) + "px");
+    }
     chef.classList.add("is-open");
     chef.setAttribute("aria-hidden", "false");
-    if (!mqMobile.matches) document.body.classList.add("chef-open");
+    if (!mqMobile.matches && !hoverMode()) document.body.classList.add("chef-open");
+  }
+
+  function scheduleClose() {
+    clearTimeout(hoverClose);
+    hoverClose = setTimeout(closeChef, 260);
   }
 
   function closeChef() {
     if (!chef || !chef.classList.contains("is-open")) return;
-    chef.classList.remove("is-open");
+    chef.classList.remove("is-open", "is-peek");
     chef.setAttribute("aria-hidden", "true");
     document.body.classList.remove("chef-open");
     members.forEach(function (x) { x.classList.remove("is-selected"); });
@@ -1247,8 +1359,21 @@
   }
 
   members.forEach(function (mb, i) {
+    var photo = mb.querySelector(".member-photo");
+    // petite intention de survol : passer sur un visage ne suffit pas à ouvrir sa fiche
+    var hoverIntent = null;
+    photo.addEventListener("mouseenter", function () {
+      if (!hoverMode()) return;
+      clearTimeout(hoverIntent);
+      hoverIntent = setTimeout(function () { openChef(i); }, 220);
+    });
+    photo.addEventListener("mouseleave", function () {
+      clearTimeout(hoverIntent);
+      if (hoverMode()) scheduleClose();
+    });
     mb.querySelector(".member-photo").addEventListener("click", function (event) {
       event.preventDefault();
+      if (hoverMode()) { openChef(i); return; }
       if (chefIndex === i) closeChef(); else openChef(i);
     });
     var more = mb.querySelector(".member-more");
@@ -1257,6 +1382,9 @@
 
   if (chef) {
     chef.querySelector(".chef-close").addEventListener("click", closeChef);
+    // on peut passer la souris du visage à la fiche sans qu'elle se ferme
+    bubble.addEventListener("mouseenter", function () { clearTimeout(hoverClose); });
+    bubble.addEventListener("mouseleave", function () { if (hoverMode()) scheduleClose(); });
     chef.querySelector(".chef-prev").addEventListener("click", function () { fillChef(chefIndex - 1); });
     chef.querySelector(".chef-next").addEventListener("click", function () { fillChef(chefIndex + 1); });
     chef.querySelectorAll(".chef-tab").forEach(function (t) {
@@ -1299,8 +1427,13 @@
 
   var xps = Array.prototype.slice.call(document.querySelectorAll(".xp"));
 
+  var xpCta = document.querySelector(".xp-one-cta");
   function setXp(item, open) {
     item.classList.toggle("is-open", open);
+    if (xpCta) {
+      var cur = document.querySelector(".xp.is-open");
+      xpCta.setAttribute("data-services", cur ? cur.getAttribute("data-services") || "" : "");
+    }
     item.querySelector(".xp-toggle").setAttribute("aria-expanded", open ? "true" : "false");
   }
 
@@ -1329,14 +1462,12 @@
     }
   });
 
-  // Desktop : au survol des expertises, la colonne s'élargit et
-  // « écrase » l'approche (la grille glisse)
-  var wrap = document.querySelector(".details-wrap");
-  var xpCol = document.getElementById("expertises-list");
-  if (wrap && xpCol && canHover) {
-    xpCol.addEventListener("mouseenter", function () { wrap.classList.add("xp-focus"); });
-    xpCol.addEventListener("mouseleave", function () { wrap.classList.remove("xp-focus"); });
-  }
+  /* FR / EN : on garde la section en cours en changeant de langue */
+  document.querySelectorAll("[data-lang-link]").forEach(function (a) {
+    a.addEventListener("click", function () {
+      if (location.hash) a.setAttribute("href", a.getAttribute("href").split("#")[0] + location.hash);
+    });
+  });
 
 
   /* =======================================================
@@ -1370,6 +1501,15 @@
   var lastTrigger = null;
 
   if (!overlay || !form) return;
+
+  // A/B test : chaque demande indique la version vue (A mobile, B→site complet, desktop, EN)
+  var variante = document.getElementById("e1-variante");
+  if (variante) {
+    var ab = document.documentElement.getAttribute("data-ab");
+    var full = false;
+    try { full = !!sessionStorage.getItem("e1-full"); } catch (e) {}
+    variante.value = LANG === "en" ? "EN" : ab === "a" ? "A · site actuel mobile" : ab === "b" ? (full ? "B · ticket puis site complet" : "B · ticket mobile") : (mqMobile.matches ? "mobile" : "desktop");
+  }
 
   function setSubmit(label, loading) {
     submit.classList.toggle("is-loading", !!loading);
@@ -1436,6 +1576,7 @@
       servicesError.classList.remove("is-visible");
     }
 
+    // le lien « Composer au saladier » est dans le formulaire lui-même
     // Petit retour haptique (Android)
     if (navigator.vibrate) navigator.vibrate(10);
 
@@ -1451,7 +1592,14 @@
     }
   }
 
+  var sentOk = false;
+
   function closeForm() {
+    // commande envoyée : la table est à débarrasser (pluie d'assiettes)
+    if (sentOk) {
+      sentOk = false;
+      setTimeout(function () { eggs.pluie(); }, 500);
+    }
     overlay.classList.remove("is-open");
     overlay.setAttribute("aria-hidden", "true");
     document.body.classList.remove("e1-form-open");
@@ -1463,7 +1611,7 @@
       servicesError.classList.remove("is-visible");
       formError.classList.remove("is-visible");
       resetValidation();
-      setSubmit("Envoyer", false);
+      setSubmit(T.send, false);
     }, 450);
   }
 
@@ -1515,7 +1663,7 @@
     if (!hasService) return;
 
     formError.classList.remove("is-visible");
-    setSubmit("Envoi", true);
+    setSubmit(T.sending, true);
 
     fetch(form.action, {
       method: "POST",
@@ -1524,14 +1672,15 @@
     })
       .then(function (response) {
         if (!response.ok) throw new Error("Formspree error");
-        setSubmit("Envoyé", true);
+        setSubmit(T.sent, true);
         submit.classList.remove("is-loading");
+        sentOk = true;
         setTimeout(function () {
           panel.classList.add("is-success");
         }, 180);
       })
       .catch(function () {
-        setSubmit("Réessayer", false);
+        setSubmit(T.retry, false);
         formError.classList.add("is-visible");
       });
   });

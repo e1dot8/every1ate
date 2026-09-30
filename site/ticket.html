@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>EVERY1.ATE — Ticket (prototype)</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="canonical" href="https://every1ate.com/">
+<script>
+/* A/B test mobile : le ticket n'existe que sur téléphone.
+   Sur un écran plus large, on revient au site (sauf ?preview). */
+(function () {
+  try {
+    if (!/[?&]preview/.test(location.search) && !window.matchMedia("(max-width: 600px)").matches) location.replace("./");
+  } catch (e) {}
+})();
+</script>
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/png" href="assets/web/favicon-64.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;700&family=Caveat:wght@500;700&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   EVERY1.ATE — PROTOTYPE « TICKET DE CAISSE GÉANT »
+   Tout le site est un ticket thermique qui s'imprime au scroll.
+   ========================================================= */
+:root {
+  --black: #000;
+  --paper: #fbfbf8;
+  --ink: #111;
+  --fluo: #fff234;
+  --pen: #e1261c;
+  --title: "Arimo", Arial, sans-serif;
+  --mono: "Courier Prime", "Courier New", monospace;
+  --hand: "Caveat", cursive;
+  --w: 600px;           /* largeur du ticket (desktop) */
+  --pad: 36px;          /* marge intérieure du ticket */
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { background: var(--black); color: var(--ink); font-family: var(--mono); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+img { display: block; max-width: 100%; }
+
+/* --- la fente de l'imprimante (haut de l'écran) --- */
+.slot {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 20; height: 18px;
+  background: var(--black);
+  box-shadow: 0 6px 14px rgba(0,0,0,.6);
+}
+.slot::after {
+  content: ""; position: absolute; left: 50%; bottom: 4px; width: calc(var(--w) + 40px); max-width: calc(100% - 16px);
+  height: 3px; transform: translateX(-50%); background: #222; border-radius: 2px;
+}
+
+/* --- mise en page : index · ticket · caisse --- */
+.stage {
+  display: grid;
+  grid-template-columns: 1fr minmax(0, var(--w)) 1fr;
+  column-gap: 48px;
+  padding: 18px 32px 120px;
+}
+.rail { position: sticky; top: 64px; align-self: start; color: #fff; font-family: var(--mono); font-size: 12px; }
+.rail-left { justify-self: end; width: 190px; }
+.rail-right { justify-self: start; width: 210px; }
+.rail-label { margin-bottom: 14px; opacity: .45; letter-spacing: .12em; text-transform: uppercase; font-size: 11px; }
+.index { list-style: none; }
+.index a { display: flex; gap: 10px; padding: 6px 0; text-decoration: none; text-transform: uppercase; letter-spacing: .08em; opacity: .45; transition: opacity .2s; }
+.index a:hover, .index a.is-on { opacity: 1; }
+.index a.is-on::after { content: "←"; margin-left: auto; color: var(--fluo); }
+.rail-clock { font-weight: 700; letter-spacing: .06em; font-size: 14px; white-space: pre; }
+.rail-open { margin-top: 6px; opacity: .6; text-transform: uppercase; letter-spacing: .06em; }
+.rail-note { margin-top: 26px; font-family: var(--hand); font-size: 24px; line-height: 1.05; color: var(--fluo); transform: rotate(-3deg); }
+.order-btn {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%;
+  margin-top: 14px; padding: 14px 16px 13px; border: 0; background: #fff; color: #000; cursor: pointer;
+  font-family: var(--title); font-weight: 700; font-size: 15px; text-transform: uppercase; text-decoration: none;
+  transition: background .15s, color .15s;
+}
+.order-btn:hover { background: var(--fluo); }
+
+/* --- le ticket --- */
+.ticket {
+  position: relative;
+  background: var(--paper);
+  padding: 44px var(--pad) 40px;
+  box-shadow: 0 30px 60px rgba(0,0,0,.5);
+  animation: feed 900ms cubic-bezier(.22,1,.36,1) both;
+}
+/* bords dentelés (papier déchiré) */
+.ticket::before, .ticket::after {
+  content: ""; position: absolute; left: 0; right: 0; height: 12px;
+  background: linear-gradient(-45deg, transparent 8px, var(--paper) 0) 0 0 / 16px 12px repeat-x,
+              linear-gradient(45deg, transparent 8px, var(--paper) 0) 0 0 / 16px 12px repeat-x;
+}
+.ticket::before { top: -11px; transform: rotate(180deg); }
+.ticket::after { bottom: -11px; }
+@keyframes feed { from { transform: translateY(-120px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* l'impression ligne par ligne */
+.js .ln { opacity: 0; transform: translateY(-6px); transition: opacity .35s ease, transform .35s ease; }
+.js .ln.is-printed { opacity: 1; transform: none; }
+
+.center { text-align: center; }
+.logo { width: 78%; margin: 0 auto 10px; }
+.tag { font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.small { font-size: 12px; line-height: 1.5; }
+.dash { height: 0; margin: 18px 0; border-top: 2px dashed var(--ink); opacity: .8; }
+.dots { height: 0; margin: 18px 0; border-top: 3px dotted var(--ink); }
+.kv { display: flex; justify-content: space-between; gap: 16px; font-size: 13px; line-height: 1.6; }
+.kv b { font-weight: 700; }
+.h {
+  margin: 4px 0 12px; font-family: var(--title); font-weight: 700; font-size: 13px; letter-spacing: .14em;
+  text-transform: uppercase; text-align: center;
+}
+.h::before, .h::after { content: " *** "; }
+.statement {
+  font-family: var(--title); font-weight: 700; text-transform: uppercase;
+  font-size: 30px; line-height: 1.02; letter-spacing: -.01em; text-align: center;
+}
+.pillars { margin-top: 12px; text-align: center; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; }
+.p { font-size: 14px; line-height: 1.55; }
+.p + .p { margin-top: 10px; }
+.p mark { background: var(--fluo); padding: 0 .12em; }
+.hand { font-family: var(--hand); font-size: 22px; color: var(--pen); line-height: 1; }
+
+/* lignes d'articles (expertises) */
+.items-head { display: grid; grid-template-columns: 38px 1fr auto; font-size: 11px; letter-spacing: .1em; opacity: .6; margin-bottom: 6px; }
+details.item { border-bottom: 1px dotted rgba(0,0,0,.35); }
+details.item summary {
+  display: grid; grid-template-columns: 38px 1fr auto; align-items: baseline; gap: 0 8px;
+  padding: 11px 0; cursor: pointer; list-style: none; font-size: 14px; text-transform: uppercase;
+}
+details.item summary::-webkit-details-marker { display: none; }
+details.item summary .price { font-size: 12px; text-transform: none; }
+details.item summary .qty { font-weight: 700; }
+details.item summary:hover { background: rgba(255,242,52,.45); }
+details.item[open] summary { background: var(--fluo); }
+details.item summary .plus { margin-left: 6px; font-weight: 700; }
+details.item[open] summary .plus { display: inline-block; transform: rotate(45deg); }
+.item-body { padding: 4px 0 14px 46px; font-size: 13px; line-height: 1.5; }
+.item-body .ex { margin-top: 8px; padding-left: 10px; border-left: 2px solid var(--pen); }
+.item-body .ex b { color: var(--pen); font-family: var(--hand); font-size: 18px; font-weight: 700; }
+.item-cta { margin-top: 10px; display: inline-block; padding: 7px 10px 6px; background: #000; color: #fff; font-family: var(--title); font-weight: 700; font-size: 11px; text-transform: uppercase; text-decoration: none; }
+
+/* la brigade (serveurs) */
+.chef { display: grid; grid-template-columns: 86px 1fr; gap: 14px; align-items: center; padding: 10px 0; }
+.chef img { width: 86px; height: 104px; object-fit: cover; filter: grayscale(1) contrast(1.4); mix-blend-mode: multiply; }
+.chef-name { font-family: var(--title); font-weight: 700; font-size: 17px; text-transform: uppercase; }
+.chef-meta { font-size: 12px; line-height: 1.45; }
+.chef-meta a { text-decoration: none; border-bottom: 1px solid; }
+
+/* méthode */
+.step { display: grid; grid-template-columns: 38px 1fr; gap: 0 8px; padding: 10px 0; border-bottom: 1px dotted rgba(0,0,0,.35); }
+.step-n { font-family: var(--title); font-weight: 700; font-size: 20px; line-height: 1; }
+.step-t { font-weight: 700; text-transform: uppercase; font-size: 14px; }
+.step-t span { font-weight: 400; text-transform: none; font-size: 12px; opacity: .7; }
+.step-get { margin-top: 4px; font-size: 13px; line-height: 1.45; }
+.step-get::before { content: "→ "; }
+
+/* total */
+.total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-family: var(--title); font-weight: 700; font-size: 22px; text-transform: uppercase; }
+.total span:last-child { text-align: right; }
+.big-order {
+  display: flex; justify-content: center; align-items: center; gap: 12px; margin: 22px 0 6px; padding: 18px 16px;
+  background: #000; color: #fff; text-decoration: none; font-family: var(--title); font-weight: 700; font-size: 20px; text-transform: uppercase;
+}
+.big-order:hover { background: var(--fluo); color: #000; }
+.approved { margin-top: 10px; font-family: var(--title); font-weight: 700; font-size: 18px; letter-spacing: .06em; }
+
+/* bon de commande */
+.f { display: block; margin-bottom: 14px; }
+.f span, .f-group legend { display: block; margin-bottom: 4px; font-size: 11px; font-weight: 700; letter-spacing: .1em; }
+.f input, .f select, .f textarea {
+  width: 100%; padding: 6px 0 7px; border: 0; border-bottom: 1.5px dashed var(--ink); border-radius: 0;
+  background: transparent; font-family: var(--mono); font-size: 16px; color: var(--ink); resize: vertical;
+}
+.f input:focus, .f select:focus, .f textarea:focus { outline: none; border-bottom-style: solid; background: rgba(255,242,52,.25); }
+.f-group { margin: 6px 0 16px; border: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chips input { position: absolute; opacity: 0; pointer-events: none; }
+.chips span { display: inline-block; padding: 7px 9px 6px; border: 1.5px solid var(--ink); font-size: 12px; cursor: pointer; }
+.chips input:checked + span { background: var(--ink); color: var(--paper); }
+.chips input[value="Urgent"]:checked + span { background: var(--pen); border-color: var(--pen); }
+.chips input:focus-visible + span { outline: 2px solid var(--pen); outline-offset: 2px; }
+.f-error { min-height: 1em; color: var(--pen); font-size: 13px; font-weight: 700; }
+.big-order { width: 100%; border: 0; cursor: pointer; }
+.tk-done { padding: 12px 0; }
+.item-cta.is-added { background: var(--fluo); color: #000; }
+
+/* code-barres */
+.barcode { display: flex; justify-content: center; align-items: stretch; height: 64px; gap: 0; margin: 20px auto 6px; }
+.barcode i { display: block; background: #000; }
+
+/* --- mobile : ticket pleine largeur + barre de paiement --- */
+.paybar { display: none; }
+@media (max-width: 1100px) {
+  .stage { grid-template-columns: minmax(0, var(--w)); justify-content: center; padding: 18px 12px 110px; }
+  .rail { display: none; }
+  .paybar {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); background: #000; color: #fff;
+    border-top: 1px solid #333; font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .06em;
+  }
+  .paybar b { display: block; font-family: var(--title); font-size: 15px; letter-spacing: 0; }
+  .paybar .order-btn { width: auto; margin: 0; padding: 12px 14px 11px; font-size: 14px; }
+}
+@media (max-width: 480px) {
+  :root { --pad: 18px; }
+  .ticket { padding-top: 34px; }
+  .statement { font-size: 24px; }
+  .p { font-size: 13px; }
+  details.item summary { font-size: 13px; grid-template-columns: 30px 1fr auto; }
+  .items-head { grid-template-columns: 30px 1fr auto; }
+  .item-body { padding-left: 38px; }
+  .total { font-size: 18px; }
+  .big-order { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticket { animation: none; }
+  .js .ln { opacity: 1; transform: none; transition: none; }
+  html { scroll-behavior: auto; }
+}
+</style>
+<script>document.documentElement.classList.add('js');</script>
+</head>
+<body>
+
+<div class="slot" aria-hidden="true"></div>
+
+<div class="stage">
+
+  <!-- index (desktop) : les rubriques du ticket -->
+  <nav class="rail rail-left" aria-label="Rubriques">
+    <p class="rail-label">( Rubriques )</p>
+    <ol class="index">
+      <li><a href="#t-accueil">01 Accueil</a></li>
+      <li><a href="#t-approche">02 Approche</a></li>
+      <li><a href="#t-carte">03 La carte</a></li>
+      <li><a href="#t-brigade">04 Brigade</a></li>
+      <li><a href="#t-pourquoi">05 Pourquoi</a></li>
+      <li><a href="#t-methode">06 Méthode</a></li>
+      <li><a href="#t-total">07 Total</a></li>
+      <li><a href="#t-commande">08 Commande</a></li>
+    </ol>
+  </nav>
+
+  <!-- LE TICKET -->
+  <main class="ticket" id="ticket">
+
+    <section id="t-accueil" class="center">
+      <img class="logo ln" src="assets/web/logo-typo-b.webp" alt="EVERY1.ATE">
+      <p class="tag ln">Creative &amp; Strategic Kitchen</p>
+      <p class="small ln" style="margin-top:8px">Studio créatif &amp; stratégique · Paris, FR<br>hello@every1ate.com · @every1.ate</p>
+      <div class="dash ln"></div>
+      <div class="ln" style="text-align:left">
+        <p class="kv"><span>BON N°</span><b data-bon>000</b></p>
+        <p class="kv"><span>TABLE</span><b>Votre marque</b></p>
+        <p class="kv"><span>SERVEURS</span><b>La brigade (3)</b></p>
+        <p class="kv"><span>HEURE</span><b data-clock>PARIS, FR 00:00:00</b></p>
+        <p class="kv"><span>CUISINE</span><b data-open>Ouverte</b></p>
+      </div>
+      <div class="dash ln"></div>
+      <h1 class="statement ln">On cuisine des expériences pour que les marques vivent avec leur communauté.</h1>
+      <p class="pillars ln">Stratégie · Création · Production · Reporting</p>
+    </section>
+
+    <div class="dots ln"></div>
+
+    <section id="t-approche">
+      <h2 class="h ln">Notre approche</h2>
+      <p class="p ln" style="font-family:var(--title);font-weight:700;font-size:17px;line-height:1.2">On croit qu’une marque n’existe vraiment que quand les gens se l’approprient.</p>
+      <p class="p ln" style="margin-top:12px">Alors on part des <mark>bons ingrédients</mark> : ce qui fait déjà la singularité d’une marque. Et on ne met <mark>pas le même assaisonnement</mark> sur toutes les marques.</p>
+      <p class="p ln">Les tendances nous intéressent quand elles servent le projet. Sinon, on prend le contre-pied.</p>
+      <p class="hand ln" style="margin-top:10px;text-align:right">tout est fait maison…</p>
+    </section>
+
+    <div class="dots ln"></div>
+
+    <section id="t-carte">
+      <h2 class="h ln">La carte</h2>
+      <p class="items-head ln"><span>QTÉ</span><span>DÉSIGNATION</span><span>PRIX</span></p>
+
+      <details class="item ln" data-svc="Stratégie de marque|Stratégie créative">
+        <summary><span class="qty">01×</span><span>Brand &amp; Creative Strategy</span><span class="price">sur devis<span class="plus">+</span></span></summary>
+        <div class="item-body">
+          <p>Comprendre ce qui rend la marque singulière et en tirer une direction claire. Puis imaginer les concepts qui la font exister.</p>
+          <p class="ex"><b>Par exemple :</b> une marque qui veut toucher une nouvelle génération sans perdre ce qui fait sa valeur.</p>
+          <a class="item-cta" href="#t-commande" data-add>Ajouter à la commande ↗</a>
+        </div>
+      </details>
+      <details class="item ln" data-svc="Direction artistique">
+        <summary><span class="qty">01×</span><span>Direction artistique</span><span class="price">sur devis<span class="plus">+</span></span></summary>
+        <div class="item-body">
+          <p>Traduire la stratégie en images : un univers, des codes, quelques règles, et un œil sur chaque production.</p>
+          <p class="ex"><b>Par exemple :</b> une marque qui lance une collection, ou un artiste qui prépare une sortie.</p>
+          <a class="item-cta" href="#t-commande" data-add>Ajouter à la commande ↗</a>
+        </div>
+      </details>
+      <details class="item ln" data-svc="Campagne publicitaire|Contenu / Social Media">
+        <summary><span class="qty">01×</span><span>Campagne &amp; Content</span><span class="price">sur devis<span class="plus">+</span></span></summary>
+        <div class="item-body">
+          <p>Imaginer, concevoir et produire vos campagnes et vos contenus social media, pensés pour chaque canal.</p>
+          <p class="ex"><b>Par exemple :</b> un lancement de produit, décliné en contenus pour chaque plateforme.</p>
+          <a class="item-cta" href="#t-commande" data-add>Ajouter à la commande ↗</a>
+        </div>
+      </details>
+      <details class="item ln" data-svc="Production photo|Production vidéo">
+        <summary><span class="qty">01×</span><span>Production photo / vidéo</span><span class="price">sur devis<span class="plus">+</span></span></summary>
+        <div class="item-body">
+          <p>L’idée existe déjà ? On la fabrique. Équipe, tournage, post-production : de la production pure.</p>
+          <p class="ex"><b>Par exemple :</b> une agence qui a besoin d’une équipe pour tourner sa campagne.</p>
+          <a class="item-cta" href="#t-commande" data-add>Ajouter à la commande ↗</a>
+        </div>
+      </details>
+      <details class="item ln" data-svc="Événement / Activation">
+        <summary><span class="qty">01×</span><span>Event &amp; Communauté</span><span class="price">sur devis<span class="plus">+</span></span></summary>
+        <div class="item-body">
+          <p>Faire vivre la marque en vrai : activations, lancements, pop-up, rencontres.</p>
+          <p class="ex"><b>Par exemple :</b> une boutique qui veut transformer un lancement en rendez-vous.</p>
+          <a class="item-cta" href="#t-commande" data-add>Ajouter à la commande ↗</a>
+        </div>
+      </details>
+      <p class="small ln" style="margin-top:10px;opacity:.6">Touchez une ligne pour voir le détail.</p>
+    </section>
+
+    <div class="dots ln"></div>
+
+    <section id="t-brigade">
+      <h2 class="h ln">La brigade</h2>
+      <p class="small ln center" style="margin-bottom:6px">Trois regards, plusieurs expertises, une même table.</p>
+      <div class="chef ln">
+        <img src="assets/SF%20Johan.png" alt="Portrait de Johan" loading="lazy">
+        <div><p class="chef-name">Johan</p><p class="chef-meta">aka Petit Bélier<br>Brand &amp; Creative Strategist / Producer<br><a href="https://www.instagram.com/petitbelier._/" target="_blank" rel="noopener">@petitbelier._</a></p></div>
+      </div>
+      <div class="chef ln">
+        <img src="assets/SF%20Pierre.png" alt="Portrait de Pierre" loading="lazy">
+        <div><p class="chef-name">Pierre</p><p class="chef-meta">aka Boxito<br>Film &amp; Art Director / Creative Tech<br><a href="https://www.instagram.com/boxitooooo/" target="_blank" rel="noopener">@boxitooooo</a></p></div>
+      </div>
+      <div class="chef ln">
+        <img src="assets/SF%20Charles.png" alt="Portrait de Charles" loading="lazy">
+        <div><p class="chef-name">Charles</p><p class="chef-meta">aka Charlito<br>Film Director &amp; Director of Photography<br><a href="https://www.instagram.com/charleslnr/" target="_blank" rel="noopener">@charleslnr</a></p></div>
+      </div>
+    </section>
+
+    <div class="dots ln"></div>
+
+    <section id="t-pourquoi" class="center">
+      <h2 class="h ln">Pourquoi Every1.ate</h2>
+      <p class="p ln" style="text-align:left">Une bonne idée ne devrait pas <mark>se perdre</mark> entre stratégie, création et production. Every1.ate réunit plusieurs expertises autour d’une même table pour transformer une intention en projet concret.</p>
+    </section>
+
+    <div class="dots ln"></div>
+
+    <section id="t-methode">
+      <h2 class="h ln">Notre méthode</h2>
+      <p class="small ln center" style="margin-bottom:6px">Cinq temps, une seule équipe du premier échange au bilan.</p>
+      <div class="step ln"><span class="step-n">1</span><div><p class="step-t">La recette <span>· Stratégie &amp; concept</span></p><p class="step-get">l’angle, le concept et le plan d’action</p></div></div>
+      <div class="step ln"><span class="step-n">2</span><div><p class="step-t">La préparation <span>· DA &amp; conception</span></p><p class="step-get">la DA validée et le rétroplanning</p></div></div>
+      <div class="step ln"><span class="step-n">3</span><div><p class="step-t">La cuisson <span>· Production &amp; réalisation</span></p><p class="step-get">un suivi en direct, sans intermédiaire</p></div></div>
+      <div class="step ln"><span class="step-n">4</span><div><p class="step-t">Le dressage <span>· Post-prod &amp; déclinaisons</span></p><p class="step-get">des contenus finis, déclinés pour chaque canal</p></div></div>
+      <div class="step ln"><span class="step-n">5</span><div><p class="step-t">Le service <span>· Livraison &amp; reporting</span></p><p class="step-get">un reporting clair : ce qui a marché, ce qu’on ajuste</p></div></div>
+      <p class="hand ln" style="margin-top:12px;text-align:center">même méthode pour tous, seul l’assaisonnement change</p>
+    </section>
+
+    <div class="dash ln"></div>
+
+    <section id="t-total">
+      <p class="kv ln"><span>SOUS-TOTAL</span><b>Une idée</b></p>
+      <p class="kv ln"><span>ASSAISONNEMENT</span><b>100 % sur-mesure</b></p>
+      <p class="kv ln"><span>RÉPONSE</span><b>sous 48 à 72 h</b></p>
+      <div class="dots ln"></div>
+      <p class="total ln"><span>Total</span><span>Une idée qui marche</span></p>
+      <a class="big-order ln" href="#t-commande">Passer commande ↓</a>
+      <p class="small ln center">Mode de règlement : un premier échange, sans engagement.</p>
+    </section>
+
+    <div class="dots ln"></div>
+
+    <section id="t-commande">
+      <h2 class="h ln">Bon de commande</h2>
+      <p class="small ln center" style="margin-bottom:14px">Quelques lignes suffisent. Réponse sous 48 à 72 h.</p>
+      <form id="tk-form" action="https://formspree.io/f/mjyvnlvd" method="POST" novalidate>
+        <input type="hidden" name="subject" value="Nouvelle demande projet — Every1.ate (ticket mobile)">
+        <input type="hidden" name="variante" value="B · ticket mobile">
+        <label class="f ln"><span>NOM / PRÉNOM *</span><input name="name" type="text" autocomplete="name" required></label>
+        <label class="f ln"><span>EMAIL *</span><input name="email" type="email" autocomplete="email" required></label>
+        <label class="f ln"><span>MARQUE / AGENCE</span><input name="company" type="text" autocomplete="organization"></label>
+        <label class="f ln"><span>BUDGET *</span>
+          <select name="budget" required>
+            <option value="" disabled selected>Sélectionner</option>
+            <option>3K€ — 5K€</option><option>5K€ — 10K€</option><option>10K€ — 20K€</option>
+            <option>20K€ — 40K€</option><option>40K€ +</option><option>Demande de devis</option>
+          </select>
+        </label>
+        <fieldset class="f-group ln">
+          <legend>OÙ EN ÊTES-VOUS ?</legend>
+          <div class="chips">
+            <label><input type="radio" name="avancement" value="Une idée"><span>Une idée</span></label>
+            <label><input type="radio" name="avancement" value="Un brief en préparation"><span>Un brief en préparation</span></label>
+            <label><input type="radio" name="avancement" value="Un projet défini"><span>Un projet défini</span></label>
+            <label><input type="radio" name="avancement" value="Une production à lancer"><span>Une production à lancer</span></label>
+            <label><input type="radio" name="avancement" value="Urgent"><span>Urgent</span></label>
+          </div>
+        </fieldset>
+        <fieldset class="f-group ln">
+          <legend>DE QUOI AVEZ-VOUS BESOIN ? *</legend>
+          <div class="chips">
+            <label><input type="checkbox" name="services" value="Stratégie de marque"><span>Stratégie de marque</span></label>
+            <label><input type="checkbox" name="services" value="Stratégie créative"><span>Stratégie créative</span></label>
+            <label><input type="checkbox" name="services" value="Direction artistique"><span>Direction artistique</span></label>
+            <label><input type="checkbox" name="services" value="Campagne publicitaire"><span>Campagne publicitaire</span></label>
+            <label><input type="checkbox" name="services" value="Contenu / Social Media"><span>Contenu / Social Media</span></label>
+            <label><input type="checkbox" name="services" value="Production photo"><span>Production photo</span></label>
+            <label><input type="checkbox" name="services" value="Production vidéo"><span>Production vidéo</span></label>
+            <label><input type="checkbox" name="services" value="Événement / Activation"><span>Événement / Activation</span></label>
+            <label><input type="checkbox" name="services" value="Je ne sais pas encore"><span>Je ne sais pas encore</span></label>
+          </div>
+        </fieldset>
+        <label class="f ln"><span>LES BONS INGRÉDIENTS DE VOTRE MARQUE</span><textarea name="bons_ingredients" rows="2" placeholder="Ce qui la rend unique…"></textarea></label>
+        <label class="f ln"><span>VOTRE PROJET *</span><textarea name="message" rows="3" required placeholder="Quelques mots suffisent"></textarea></label>
+        <p class="f-error" role="alert"></p>
+        <button class="big-order" type="submit">Valider la commande ↗</button>
+        <p class="small center" style="opacity:.6">Vos informations servent uniquement à répondre à votre demande.</p>
+      </form>
+      <div class="tk-done center" hidden>
+        <p class="approved">*** COMMANDE ENVOYÉE ***</p>
+        <p class="p" style="margin-top:10px">Merci. Votre demande est entre de bonnes mains. On revient vers vous par mail sous 48 à 72 h.</p>
+      </div>
+    </section>
+
+    <div class="dots ln"></div>
+
+    <section>
+      <div class="center ln">
+        <p class="approved">*** MERCI, À TRÈS VITE ***</p>
+        <p class="small" style="margin-top:8px">hello@every1ate.com<br>instagram @every1.ate · linkedin every1-ate</p>
+        <div class="barcode" aria-hidden="true" data-barcode></div>
+        <p class="small" style="letter-spacing:.3em">E1A-2026-PARIS</p>
+        <p class="small" style="margin-top:12px;opacity:.6">Conservez ce ticket. © 2026 EVERY1ATE SAS</p>
+        <p class="small" style="margin-top:10px"><a href="./?full=1">Voir la version complète du site</a> · <a href="mentions-legales.html">Mentions légales</a></p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- caisse (desktop) : heure + commande toujours visibles -->
+  <aside class="rail rail-right" aria-label="Commande">
+    <p class="rail-label">( Caisse )</p>
+    <p class="rail-clock" data-clock>PARIS, FR 00:00:00</p>
+    <p class="rail-open" data-open>La cuisine est ouverte</p>
+    <a class="order-btn" href="#t-commande">Commander <span>↗</span></a>
+    <p class="rail-note">réponse sous<br>48 à 72 h</p>
+  </aside>
+
+</div>
+
+<!-- mobile : barre de paiement -->
+<div class="paybar">
+  <p>Total<b data-cart>1 projet · sur-mesure</b></p>
+  <a class="order-btn" href="#t-commande">Commander ↗</a>
+</div>
+
+<script>
+(function () {
+  /* horloge Paris + état de la cuisine */
+  function tick() {
+    var now = new Date();
+    var t = now.toLocaleTimeString("fr-FR", { timeZone: "Europe/Paris", hour12: false });
+    var h = parseInt(t.slice(0, 2), 10);
+    document.querySelectorAll("[data-clock]").forEach(function (el) { el.textContent = "PARIS, FR  " + t; });
+    var resting = h >= 2 && h < 6;
+    document.querySelectorAll("[data-open]").forEach(function (el) {
+      el.textContent = el.tagName === "B" ? (resting ? "Se repose (commandes ouvertes)" : "Ouverte") : (resting ? "La cuisine se repose" : "La cuisine est ouverte");
+    });
+  }
+  tick(); setInterval(tick, 1000);
+
+  /* numéro de bon */
+  var bon = document.querySelector("[data-bon]");
+  if (bon) bon.textContent = String(Math.floor(Math.random() * 900) + 100);
+
+  /* code-barres */
+  var bc = document.querySelector("[data-barcode]");
+  if (bc) {
+    var html = "";
+    for (var i = 0; i < 70; i++) {
+      var w = [1, 1, 2, 3][Math.floor(Math.random() * 4)];
+      html += '<i style="width:' + w + 'px;margin-right:' + ([1, 2, 3][Math.floor(Math.random() * 3)]) + 'px"></i>';
+    }
+    bc.innerHTML = html;
+  }
+
+  /* le ticket s'imprime ligne par ligne au scroll */
+  var lines = document.querySelectorAll(".ln");
+  if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    var io = new IntersectionObserver(function (entries) {
+      var k = 0;
+      entries.forEach(function (e) {
+        if (!e.isIntersecting) return;
+        var el = e.target;
+        setTimeout(function () { el.classList.add("is-printed"); }, 40 * k++);
+        io.unobserve(el);
+      });
+    }, { rootMargin: "0px 0px -8% 0px" });
+    lines.forEach(function (l) { io.observe(l); });
+  } else {
+    lines.forEach(function (l) { l.classList.add("is-printed"); });
+  }
+
+  /* index : rubrique en cours */
+  var links = document.querySelectorAll(".index a");
+  var secs = Array.prototype.map.call(links, function (a) { return document.querySelector(a.getAttribute("href")); });
+  function spy() {
+    var y = window.innerHeight * 0.35, cur = 0;
+    secs.forEach(function (s, i) { if (s && s.getBoundingClientRect().top < y) cur = i; });
+    links.forEach(function (a, i) { a.classList.toggle("is-on", i === cur); });
+  }
+  window.addEventListener("scroll", spy, { passive: true }); spy();
+
+  /* « Ajouter à la commande » : on coche les services dans le bon de commande */
+  var form = document.getElementById("tk-form");
+  var cart = document.querySelector("[data-cart]");
+  function updateCart() {
+    var n = form.querySelectorAll('input[name="services"]:checked').length;
+    if (cart) cart.textContent = n ? n + (n > 1 ? " articles" : " article") + " · sur-mesure" : "1 projet · sur-mesure";
+  }
+  document.querySelectorAll("[data-add]").forEach(function (a) {
+    a.addEventListener("click", function (e) {
+      e.preventDefault(); // on reste sur la carte : on peut ajouter plusieurs articles
+      var d = a.closest("details");
+      (d.getAttribute("data-svc") || "").split("|").forEach(function (v) {
+        var box = form.querySelector('input[name="services"][value="' + v + '"]');
+        if (box) box.checked = true;
+      });
+      a.classList.add("is-added");
+      a.textContent = "Ajouté à la commande ✓";
+      updateCart();
+    });
+  });
+  form.addEventListener("change", updateCart);
+
+  /* envoi du bon de commande (Formspree) */
+  var err = form.querySelector(".f-error");
+  var btn = form.querySelector('button[type="submit"]');
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var bad = Array.prototype.filter.call(form.querySelectorAll("[required]"), function (f) { return !f.checkValidity(); })[0];
+    if (bad) { err.textContent = "Il manque une ligne : " + bad.closest("label").querySelector("span").textContent.replace(" *", "").toLowerCase() + "."; bad.focus(); return; }
+    if (!form.querySelector('input[name="services"]:checked')) { err.textContent = "Choisissez au moins un besoin."; return; }
+    err.textContent = "";
+    btn.disabled = true; btn.textContent = "Impression…";
+    fetch(form.action, { method: "POST", body: new FormData(form), headers: { Accept: "application/json" } })
+      .then(function (r) {
+        if (!r.ok) throw new Error();
+        form.hidden = true;
+        document.querySelector(".tk-done").hidden = false;
+        document.getElementById("t-commande").scrollIntoView({ behavior: "smooth", block: "start" });
+      })
+      .catch(function () {
+        btn.disabled = false; btn.textContent = "Réessayer ↗";
+        err.textContent = "Oups, l’envoi n’est pas passé. Réessayez dans un instant.";
+      });
+  });
+
+  /* une seule ligne de la carte ouverte à la fois */
+  var items = document.querySelectorAll("details.item");
+  items.forEach(function (d) {
+    d.addEventListener("toggle", function () {
+      if (d.open) items.forEach(function (o) { if (o !== d) o.open = false; });
+    });
+  });
+})();
+</script>
+</body>
+</html>

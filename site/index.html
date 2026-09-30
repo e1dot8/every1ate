@@ -6,9 +6,33 @@
 <title>EVERY1.ATE — Studio créatif &amp; stratégique à Paris</title>
 <meta name="description" content="EVERY1.ATE est un studio créatif et stratégique basé à Paris : stratégie de marque, concepts, direction artistique, campagnes, contenus social media, production photo &amp; vidéo et activations. Mode, musique, sport et culture populaire.">
 <link rel="canonical" href="https://every1ate.com/">
+<link rel="alternate" hreflang="fr" href="https://every1ate.com/">
+<link rel="alternate" hreflang="en" href="https://every1ate.com/en/">
+<link rel="alternate" hreflang="x-default" href="https://every1ate.com/">
 <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="author" content="EVERY1.ATE">
 <meta name="theme-color" content="#000000">
+<!-- A/B TEST MOBILE : A = site actuel · B = ticket (ticket.html). Desktop : toujours A.
+     ÉTEINT pour l’instant : passer AB_ON à true pour le lancer (et remettre la phrase A/B des mentions légales). -->
+<script id="ab-test">
+(function () {
+  var AB_ON = false;
+  try {
+    var q = location.search, k = "e1-ab", ls = window.localStorage;
+    if (/[?&]ab=reset/.test(q)) ls.removeItem(k);
+    var force = q.match(/[?&]ab=(a|b)/);
+    if (force) ls.setItem(k, force[1]);
+    if (/[?&]full=1/.test(q)) sessionStorage.setItem("e1-full", "1");
+    if (!AB_ON && !force) return; // test éteint (?ab=b reste possible pour vérifier)
+    if (/bot|crawl|spider|slurp|lighthouse|preview|headless/i.test(navigator.userAgent) && !force) return;
+    if (!window.matchMedia("(max-width: 600px)").matches) return;
+    var v = ls.getItem(k);
+    if (v !== "a" && v !== "b") { v = Math.random() < 0.5 ? "a" : "b"; ls.setItem(k, v); }
+    document.documentElement.setAttribute("data-ab", v);
+    if (v === "b" && !sessionStorage.getItem("e1-full") && location.hash !== "#contact") location.replace("ticket.html");
+  } catch (e) {}
+})();
+</script>
 <link rel="icon" type="image/png" href="assets/web/favicon-64.png">
 <link rel="apple-touch-icon" href="assets/web/icon-180.png">
 
@@ -101,15 +125,18 @@
   <div class="hero-stage">
 
     <!-- Une seule vidéo : le navigateur choisit la bonne source au chargement -->
-    <video class="hero-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+    <video class="hero-video" autoplay muted loop playsinline preload="auto" disablepictureinpicture disableremoteplayback poster="assets/web/hero-poster.jpg" aria-hidden="true">
       <source media="(max-width: 480px)" src="assets/video-mobile.mp4" type="video/mp4">
       <source src="assets/Video_WOK_web.mp4" type="video/mp4">
     </video>
 
     <!-- Top bar initiale -->
     <div class="hero-top">
-      <p class="hero-open open-label" id="hero-open">Ouverts aux projets</p>
-      <p class="hero-clock" data-paris-clock>PARIS, FR 00:00:00</p>
+      <p class="hero-open open-label" id="hero-open">La cuisine est ouverte</p>
+      <div class="hero-top-right">
+        <p class="hero-clock" data-paris-clock>PARIS, FR 00:00:00</p>
+        <p class="lang-switch"><a href="./" lang="fr" data-lang-link aria-current="true">FR</a><span aria-hidden="true"> / </span><a href="en/" lang="en" hreflang="en" data-lang-link>EN</a></p>
+      </div>
     </div>
 
     <!-- Logo desktop -->
@@ -127,22 +154,24 @@
 
     <!-- Mini-barre de transition (mobile uniquement, pas une navbar) -->
     <div class="m-bar" aria-hidden="true">
-      <p class="m-bar-open open-label">Ouverts aux projets</p>
+      <p class="m-bar-open open-label" data-short>Cuisine ouverte</p>
       <p class="m-bar-clock" data-paris-clock>PARIS, FR 00:00:00</p>
     </div>
 
     <!-- Bas du hero -->
     <!-- Bas du hero : le texte (en négatif sur la vidéo) et le CTA, séparés -->
     <div class="hero-say">
-      <h1 class="hero-statement"><span class="sr-only">EVERY1.ATE, studio créatif et stratégique à Paris. </span>On cuisine des expériences pour que les marques vivent avec leur communauté.</h1>
+      <h1 class="hero-statement"><span class="sr-only">EVERY1.ATE, studio créatif et stratégique à Paris qui imagine et produit des campagnes, contenus et expériences pour les marques. </span>On cuisine des expériences pour que les marques vivent avec leur communauté.</h1>
+      <p class="hero-pillars"><span>Stratégie</span><span aria-hidden="true">·</span><span>Création</span><span aria-hidden="true">·</span><span>Production</span><span aria-hidden="true">·</span><span>Reporting</span></p>
     </div>
-    <button type="button" class="hero-cta" data-open-form>Parlons projet <svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>
+    <button type="button" class="hero-cta" data-open-form>Parlons de votre projet <svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>
 
   </div>
 </header>
 
 
 <main id="main">
+
 
 <!-- =====================================================
      2. APPROCHE · EXPERTISES · BRIGADE
@@ -156,80 +185,78 @@
       <p class="note note-left note-psst" data-reveal>psst… les mots surlignés se cliquent</p>
       <p class="lead" data-reveal data-mark>On croit qu’une marque n’existe vraiment que quand les gens se l’approprient.</p>
       <div class="approche-cols" data-reveal data-mark>
-        <p class="approche-text">Alors on part des bons ingrédients&nbsp;: ce qui fait déjà la singularité d’une marque, ses produits, son histoire, sa communauté, ses codes, son environnement. On regarde aussi ce qui bouge autour d’elle, et on ne met <b data-egg="plat" role="button" tabindex="0">pas le même assaisonnement sur toutes les marques</b>.</p>
-        <p class="approche-text"><strong>Les tendances nous intéressent quand elles servent le projet.</strong> Sinon, on prend le contre-pied. La bonne recette crée du lien entre la marque et les gens, et on sait la mener jusqu’au bout.</p>
+        <p class="approche-text">Alors on part des <b data-ingredients role="button" tabindex="0">bons ingrédients</b>&nbsp;: ce qui fait déjà la singularité d’une marque, ses produits, son histoire, sa communauté, ses codes, son environnement. On regarde aussi ce qui bouge autour d’elle, et on ne met <b data-egg="saliere" role="button" tabindex="0">pas le même assaisonnement</b> sur toutes les marques.</p>
+        <p class="approche-text"><strong>Les tendances nous intéressent quand elles servent le projet.</strong> Sinon, on prend le contre-pied. La bonne recette crée du lien entre la marque et les gens, et on la porte <b data-egg="plat" role="button" tabindex="0">de l’idée jusqu’à la concrétisation</b>.</p>
       </div>
     </div>
   </section>
+  <div class="stack-hold-m" aria-hidden="true"></div>
 
   <section id="expertises-list" class="stack-card card-details card-xp sec" aria-labelledby="t-expertises">
     <h2 class="sec-label" id="t-expertises" data-reveal>Nos expertises</h2>
     <div class="sec-content" data-reveal>
     <ul class="expertises">
-      <li class="xp">
+      <li class="xp" data-services="Stratégie de marque|Stratégie créative">
         <button type="button" class="xp-toggle" aria-expanded="false" aria-controls="xp-1">
           <span class="xp-title">Brand &amp; Creative Strategy</span><span class="xp-plus" aria-hidden="true"></span>
         </button>
         <div class="xp-panel" id="xp-1">
           <div class="xp-inner">
-            <p class="xp-desc">Comprendre ce qui rend la marque singulière et en tirer une direction claire. Puis imaginer les concepts qui la font exister : idées marketing, campagnes, formats, prises de parole.</p>
+            <p class="xp-desc">Comprendre ce qui rend la marque <mark>singulière</mark> et en tirer une <mark>direction claire</mark>. Puis imaginer les <mark>concepts</mark> qui la font exister : idées marketing, campagnes, formats, prises de parole.</p>
             <p class="xp-example"><span class="xp-label">Par exemple :</span> une marque qui veut toucher une nouvelle génération sans perdre ce qui fait sa valeur. On définit ce qu’elle doit dire, puis on imagine le concept qui l’installe.</p>
-            <button type="button" class="xp-cta" data-open-form data-services="Stratégie de marque|Stratégie créative">Ce projet me parle<svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>
           </div>
         </div>
       </li>
-      <li class="xp">
+      <li class="xp" data-services="Direction artistique">
         <button type="button" class="xp-toggle" aria-expanded="false" aria-controls="xp-2">
           <span class="xp-title">Direction Artistique</span><span class="xp-plus" aria-hidden="true"></span>
         </button>
         <div class="xp-panel" id="xp-2">
           <div class="xp-inner">
-            <p class="xp-desc">Traduire la stratégie en images : un univers, des codes, quelques règles, et un œil sur chaque production pour que tout reste cohérent.</p>
+            <p class="xp-desc">Traduire la stratégie en images : <mark>un univers</mark>, des codes, quelques règles, et un œil sur chaque production pour que tout reste <mark>cohérent</mark>.</p>
             <p class="xp-example"><span class="xp-label">Par exemple :</span> une marque qui lance une collection, ou un artiste qui prépare une sortie. On construit un univers visuel reconnaissable, qui tient sur toute la durée du projet.</p>
-            <button type="button" class="xp-cta" data-open-form data-services="Direction artistique">Ce projet me parle<svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>
           </div>
         </div>
       </li>
-      <li class="xp">
+      <li class="xp" data-services="Campagne publicitaire|Contenu / Social Media">
         <button type="button" class="xp-toggle" aria-expanded="false" aria-controls="xp-3">
           <span class="xp-title">Campagne &amp; Content</span><span class="xp-plus" aria-hidden="true"></span>
         </button>
         <div class="xp-panel" id="xp-3">
           <div class="xp-inner">
-            <p class="xp-desc">Imaginer, concevoir et produire vos campagnes de publicité et vos contenus social media, avec un format pensé pour chaque canal.</p>
+            <p class="xp-desc">Imaginer, concevoir et produire vos <mark>campagnes de publicité</mark> et vos <mark>contenus social media</mark>, avec un format pensé pour chaque canal.</p>
             <p class="xp-example"><span class="xp-label">Par exemple :</span> un lancement de produit. On imagine la campagne, on la produit, puis on la décline en contenus pour chaque plateforme.</p>
-            <button type="button" class="xp-cta" data-open-form data-services="Campagne publicitaire|Contenu / Social Media">Ce projet me parle<svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>
           </div>
         </div>
       </li>
-      <li class="xp">
+      <li class="xp" data-services="Production photo|Production vidéo">
         <button type="button" class="xp-toggle" aria-expanded="false" aria-controls="xp-4">
           <span class="xp-title">Production<br>Photo / Vidéo</span><span class="xp-plus" aria-hidden="true"></span>
         </button>
         <div class="xp-panel" id="xp-4">
           <div class="xp-inner">
-            <p class="xp-desc">L’idée existe déjà ? On la fabrique. Équipe, tournage, post-production : de la production pure, pour les marques, les artistes et les agences.</p>
+            <p class="xp-desc">L’idée existe déjà ? <mark>On la fabrique.</mark> Équipe, tournage, post-production : de la production pure, pour les marques, les artistes et les agences.</p>
             <p class="xp-example"><span class="xp-label">Par exemple :</span> une agence qui a besoin d’une équipe pour tourner sa campagne, ou un artiste qui prépare un clip.</p>
-            <button type="button" class="xp-cta" data-open-form data-services="Production photo|Production vidéo">Ce projet me parle<svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>
           </div>
         </div>
       </li>
-      <li class="xp">
+      <li class="xp" data-services="Événement / Activation">
         <button type="button" class="xp-toggle" aria-expanded="false" aria-controls="xp-5">
           <span class="xp-title">Event &amp; Communauté</span><span class="xp-plus" aria-hidden="true"></span>
         </button>
         <div class="xp-panel" id="xp-5">
           <div class="xp-inner">
-            <p class="xp-desc">Faire vivre la marque en vrai : activations, lancements, pop-up, rencontres. Des moments pensés pour être vécus sur place et racontés avant, pendant et après.</p>
+            <p class="xp-desc">Faire vivre la marque <mark>en vrai</mark> : activations, lancements, pop-up, rencontres. Des moments pensés pour être <mark>vécus sur place</mark> et racontés avant, pendant et après.</p>
             <p class="xp-example"><span class="xp-label">Par exemple :</span> une marque ou une boutique qui veut transformer un lancement en rendez-vous. On imagine le moment sur place, puis on le raconte en ligne pour que ceux qui n’étaient pas là aient envie de venir la prochaine fois.</p>
-            <button type="button" class="xp-cta" data-open-form data-services="Événement / Activation">Ce projet me parle<svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>
           </div>
         </div>
       </li>
     </ul>
-    <button type="button" class="note note-left note-egg" data-egg="rush">tout est fait maison… et ça chauffe vite</button>
+    <button type="button" class="xp-one-cta" data-open-form data-services="">Un plat vous tente&nbsp;? Parlons-en<svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>
+    <button type="button" class="note note-left note-egg" data-egg="rush">tout est fait maison… et <b class="note-mark">ça chauffe vite</b></button>
     </div>
   </section>
+  <div class="stack-hold-m" aria-hidden="true"></div>
 
   <!-- =====================================================
        LA BRIGADE (3e colonne sur desktop)
@@ -320,6 +347,25 @@
 
 </div>
 
+<!-- temps d’arrêt : la carte reste affichée avant que la méthode glisse dessus -->
+<div class="stack-hold" aria-hidden="true"></div>
+
+<!-- =====================================================
+     POURQUOI EVERY1.ATE — le manifeste, après la brigade
+     Fond noir, logo blanc (façon carte de visite)
+     ===================================================== -->
+<section id="pourquoi" class="stack-card why" aria-labelledby="t-why">
+  <h2 class="why-label" id="t-why">Pourquoi Every1.ate</h2>
+  <p class="why-text" data-reveal>Une bonne idée ne devrait pas <b>se perdre</b> entre stratégie, création et production. Every1.ate réunit plusieurs expertises autour d’une même table pour transformer une intention en projet concret.</p>
+  <ul class="why-row">
+    <li>Stratégie</li>
+    <li>Création</li>
+    <li>Production</li>
+    <li>Reporting</li>
+  </ul>
+</section>
+
+
 <!-- =====================================================
      3. LA MÉTHODE (2e carte, se fige le temps des 5 étapes)
      ===================================================== -->
@@ -328,7 +374,7 @@
     <div class="method-head">
       <h2 class="sec-label" id="method-title">Notre méthode</h2>
       <div class="method-intro-wrap">
-        <p class="method-intro">De l’idée à la diffusion, un seul studio&nbsp;: on pense, on crée et on produit en interne, avec la même équipe du premier échange à la livraison.</p>
+        <p class="method-intro">Cinq temps, une seule équipe du premier échange au bilan. Et à chaque étape, quelque chose de concret entre vos mains.</p>
         <p class="note note-left note-method">même méthode pour tous, seul l’assaisonnement change</p>
       </div>
     </div>
@@ -338,39 +384,39 @@
       <div class="step-body" id="step-1">
         <p class="step-title" aria-hidden="true">La recette</p>
         <p class="step-pro">Stratégie &amp; concept</p>
-        <p class="step-text">On comprend la marque, son marché et sa communauté, puis on écrit l’idée et le plan d’action.</p>
+        <p class="step-text">On écoute, on analyse la marque et sa communauté. <b class="step-get">Vous recevez&nbsp;: l’angle, le concept et le plan d’action.</b></p>
       </div>
     </li>
     <li class="step">
       <button type="button" class="step-btn" aria-expanded="false" aria-controls="step-2"><span class="step-n" aria-hidden="true">2</span><span class="step-name">La préparation</span></button>
       <div class="step-body" id="step-2">
         <p class="step-title" aria-hidden="true">La préparation</p>
-        <p class="step-pro">Direction artistique &amp; pré-production</p>
-        <p class="step-text">Univers visuel, références, casting, repérages, planning&nbsp;: tout est prêt avant de produire.</p>
+        <p class="step-pro">Direction artistique &amp; conception</p>
+        <p class="step-text">Univers visuel, casting, repérages, planning&nbsp;: tout est prêt avant de tourner. <b class="step-get">Vous recevez&nbsp;: la DA validée et le rétroplanning.</b></p>
       </div>
     </li>
     <li class="step">
       <button type="button" class="step-btn" aria-expanded="false" aria-controls="step-3"><span class="step-n" aria-hidden="true">3</span><span class="step-name">La cuisson</span></button>
       <div class="step-body" id="step-3">
         <p class="step-title" aria-hidden="true">La cuisson</p>
-        <p class="step-pro">Tournage &amp; production</p>
-        <p class="step-text">Photo, vidéo, événement&nbsp;: on produit sur le terrain, avec notre propre équipe.</p>
+        <p class="step-pro">Production &amp; réalisation</p>
+        <p class="step-text">Tournage, shooting, événement&nbsp;: notre équipe sur le terrain. <b class="step-get">Vous recevez&nbsp;: un suivi en direct, sans intermédiaire.</b></p>
       </div>
     </li>
     <li class="step">
       <button type="button" class="step-btn" aria-expanded="false" aria-controls="step-4"><span class="step-n" aria-hidden="true">4</span><span class="step-name">Le dressage</span></button>
       <div class="step-body" id="step-4">
         <p class="step-title" aria-hidden="true">Le dressage</p>
-        <p class="step-pro">Post-production &amp; finitions</p>
-        <p class="step-text">Montage, étalonnage, graphisme, motion&nbsp;: chaque contenu est mis en forme pour son canal.</p>
+        <p class="step-pro">Post-production &amp; déclinaisons</p>
+        <p class="step-text">Montage, étalonnage, graphisme, motion. <b class="step-get">Vous recevez&nbsp;: des contenus finis, déclinés pour chaque canal.</b></p>
       </div>
     </li>
     <li class="step">
       <button type="button" class="step-btn" aria-expanded="false" aria-controls="step-5"><span class="step-n" aria-hidden="true">5</span><span class="step-name">Le service</span></button>
       <div class="step-body" id="step-5">
         <p class="step-title" aria-hidden="true">Le service</p>
-        <p class="step-pro">Livraison &amp; diffusion</p>
-        <p class="step-text">On livre, on accompagne la diffusion et on reste là pour la suite.</p>
+        <p class="step-pro">Livraison &amp; reporting</p>
+        <p class="step-text">On livre, puis on mesure les résultats. <b class="step-get">Vous recevez&nbsp;: un reporting clair, ce qui a marché et ce qu’on ajuste.</b></p>
       </div>
     </li>
   </ol>
@@ -389,29 +435,28 @@
 
   <div class="footer-cta" id="footer-cta">
     <div class="footer-cta-row">
-      <button type="button" class="footer-title" data-open-form>Parlons de<br>votre projet<svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>
-      <button type="button" class="footer-icon" data-egg="pluie" aria-label="EVERY1.ATE"><img src="assets/web/logo-icon-w.webp" alt="" loading="lazy"></button>
+      <button type="button" class="footer-title" data-ring>Une idée&nbsp;?<br>Sonnez.</button>
+      <div class="footer-bell-wrap">
+        <p class="footer-bell-note" aria-live="polite"></p>
+        <button type="button" class="footer-bell" data-ring aria-label="Sonner la cloche : 3 coups ouvrent le formulaire"><svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M32 6v5M10 38a22 22 0 0 1 44 0Z" fill="currentColor"/><circle cx="32" cy="6" r="3.5" fill="currentColor"/><rect x="4" y="39" width="56" height="5" fill="currentColor"/></svg></button>
+      </div>
     </div>
-    <div class="footer-mail">
-      <a id="footer-email" href="mailto:hello@every1ate.com?subject=Contact%20%E2%80%94%20Every1.ate">hello@every1ate.com</a>
-      <button type="button" class="copy-mail" data-copy="hello@every1ate.com">Copier</button>
+    <div class="footer-info">
+      <p class="footer-clock" data-paris-clock>PARIS, FR 00:00:00</p>
+      <div class="footer-mail">
+        <a id="footer-email" href="mailto:hello@every1ate.com?subject=Contact%20%E2%80%94%20Every1.ate" data-copy="hello@every1ate.com" title="Cliquer pour copier">hello@every1ate.com</a>
+      </div>
     </div>
-    <button type="button" class="note note-left note-egg note-footer" data-egg="cloche">une idée&nbsp;? sonnez, on arrive</button>
-  </div>
-
-  <!-- Mobile : la signature en grand, façon Yard -->
-  <div class="footer-mark" aria-hidden="true">
-    <img src="assets/web/logo-typo-w.webp" alt="" loading="lazy">
   </div>
 
   <div id="footer-main" class="footer-main">
-    <p class="footer-address">38 rue des Mathurins<br> 75008 Paris</p>
     <ul class="footer-links">
       <li><a id="footer-instagram" href="https://www.instagram.com/every1.ate/" target="_blank" rel="noopener noreferrer">Instagram</a></li>
       <li><a id="footer-linkedin" href="https://www.linkedin.com/company/every1-ate/" target="_blank" rel="noopener noreferrer">LinkedIn</a></li>
       <li><a href="mentions-legales.html">Mentions légales</a></li>
       <li><button type="button" class="open-carte open-carte-footer">La carte secrète</button></li>
     </ul>
+    <p class="lang-switch footer-lang"><a href="./" lang="fr" data-lang-link aria-current="true">FR</a><span aria-hidden="true"> / </span><a href="en/" lang="en" hreflang="en" data-lang-link>EN</a></p>
     <p id="footer-legal" class="footer-meta">© 2026 EVERY1.ATE · Studio créatif &amp; stratégique, Paris</p>
   </div>
 
@@ -443,7 +488,7 @@
 
 
 <!-- CTA flottant : apparaît après le hero, disparaît au footer -->
-<button type="button" class="float-cta" data-open-form aria-hidden="true" tabindex="-1"><span class="fc-long">Parlons projet</span><span class="fc-short">Projet&nbsp;?</span><svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>
+<button type="button" class="float-cta" data-open-form aria-hidden="true" tabindex="-1"><span class="fc-long">Parlons de votre projet</span><span class="fc-short">Projet&nbsp;?</span><svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>
 
 <!-- Petites notifications (copie de l'email, easter eggs) -->
 <div class="toast" role="status" aria-live="polite"></div>
@@ -482,10 +527,10 @@
         <p class="chef-stats-title">Dans la méthode</p>
         <ol class="chef-cycle" aria-label="Les étapes d’un projet">
           <li data-k="0"><b>La recette</b><span>Stratégie &amp; concept</span></li>
-          <li data-k="0,1,2"><b>La préparation</b><span>DA &amp; pré-production</span></li>
-          <li data-k="0,1,2"><b>La cuisson</b><span>Tournage &amp; production</span></li>
-          <li data-k="1,2"><b>Le dressage</b><span>Post-prod &amp; finitions</span></li>
-          <li data-k="0,2"><b>Le service</b><span>Livraison &amp; diffusion</span></li>
+          <li data-k="0,1,2"><b>La préparation</b><span>DA &amp; conception</span></li>
+          <li data-k="0,1,2"><b>La cuisson</b><span>Production &amp; réalisation</span></li>
+          <li data-k="1,2"><b>Le dressage</b><span>Post-prod &amp; déclinaisons</span></li>
+          <li data-k="0,2"><b>Le service</b><span>Livraison &amp; reporting</span></li>
         </ol>
         <p class="chef-stats-title">Ingrédients</p>
         <ul class="chef-stat-list"></ul>
@@ -505,10 +550,10 @@
   <div class="carte-body">
     <button type="button" class="carte-item" data-run="rush"><span>Coup de feu</span></button>
     <button type="button" class="carte-item" data-run="plat"><span>Plat du jour</span></button>
+    <button type="button" class="carte-item" data-run="saliere"><span>La salière</span></button>
     <button type="button" class="carte-item" data-run="cloche"><span>La cloche du service</span></button>
-    <button type="button" class="carte-item" data-run="pluie"><span>Pluie d’assiettes</span></button>
   </div>
-  <p class="carte-hint">Indice : les mots surlignés, certaines annotations au stylo et le logo du bas font la même chose.</p>
+  <p class="carte-hint">Indice : les mots surlignés, certaines annotations au stylo et le footer font la même chose.</p>
 </div>
 
 <!-- Easter egg : coup de feu (bandeau) -->
@@ -535,15 +580,11 @@
   </div>
 </div>
 
-<!-- Easter egg : la cloche du service -->
-<div class="bell" aria-hidden="true">
-  <button type="button" class="bell-btn" aria-label="Sonner la cloche">
-    <svg viewBox="0 0 64 48" aria-hidden="true" focusable="false"><path d="M32 6v5M10 38a22 22 0 0 1 44 0Z" fill="currentColor"/><circle cx="32" cy="6" r="3.5" fill="currentColor"/><rect x="4" y="39" width="56" height="5" fill="currentColor"/></svg>
-  </button>
-  <p class="bell-text">Sonnez 3 fois</p>
-  <button type="button" class="bell-close" aria-label="Fermer">×</button>
+<!-- Easter egg : la salière -->
+<div class="salt" aria-hidden="true">
+  <p class="salt-hint">À vous de doser&nbsp;: <span class="salt-hint-action">cliquez pour saler</span></p>
+  <div class="salt-shaker"><svg viewBox="0 0 40 56" aria-hidden="true" focusable="false"><path d="M8 20h24l-3 34H11Z" fill="#fff" stroke="#000" stroke-width="2.5"/><path d="M6 20c0-9 6-16 14-16s14 7 14 16Z" fill="#000"/><circle cx="16" cy="12" r="1.6" fill="#fff"/><circle cx="24" cy="12" r="1.6" fill="#fff"/><circle cx="20" cy="8" r="1.6" fill="#fff"/></svg></div>
 </div>
-
 
 <!-- Easter egg : le plat du jour (ticket de cuisine) -->
 <aside class="ticket" aria-hidden="true">
@@ -557,7 +598,7 @@
   <dl class="ticket-lines">
     <dt>Ingrédients</dt><dd>votre marque, notre brigade, une bonne dose de culot</dd>
     <dt>Cuisson</dt><dd>réponse sous 48 à 72&nbsp;h</dd>
-    <dt>Accompagnement</dt><dd>de l’idée jusqu’au bout</dd>
+    <dt>Accompagnement</dt><dd>de l’idée jusqu’à la concrétisation</dd>
   </dl>
   <div class="ticket-actions">
     <button type="button" class="ticket-order" data-open-form>Commander<svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>
@@ -588,6 +629,7 @@
     <form id="e1-project-form" action="https://formspree.io/f/mjyvnlvd" method="POST">
 
       <input type="hidden" name="subject" value="Nouvelle demande projet — Every1.ate">
+      <input type="hidden" name="variante" id="e1-variante" value="desktop">
 
 
       <div class="e1-form-grid">
@@ -624,6 +666,20 @@
 
         <div class="e1-field e1-full">
           <div class="e1-services-header">
+            <span class="e1-services-label" id="e1-stage-label">Où en êtes-vous ?</span>
+            <span class="e1-services-help">Un seul choix</span>
+          </div>
+          <div class="e1-services e1-stage" role="radiogroup" aria-labelledby="e1-stage-label">
+            <label class="e1-service"><input type="radio" name="avancement" value="Une idée"><span>Une idée</span></label>
+            <label class="e1-service"><input type="radio" name="avancement" value="Un brief en préparation"><span>Un brief en préparation</span></label>
+            <label class="e1-service"><input type="radio" name="avancement" value="Un projet défini"><span>Un projet défini</span></label>
+            <label class="e1-service"><input type="radio" name="avancement" value="Une production à lancer"><span>Une production à lancer</span></label>
+            <label class="e1-service e1-urgent"><input type="radio" name="avancement" value="Urgent"><span>Urgent</span></label>
+          </div>
+        </div>
+
+        <div class="e1-field e1-full">
+          <div class="e1-services-header">
             <span class="e1-services-label">De quoi avez-vous besoin ? *</span>
             <span class="e1-services-help">Plusieurs choix possibles</span>
           </div>
@@ -637,10 +693,16 @@
             <label class="e1-service"><input type="checkbox" name="services" value="Production photo"><span>Production photo</span></label>
             <label class="e1-service"><input type="checkbox" name="services" value="Production vidéo"><span>Production vidéo</span></label>
             <label class="e1-service"><input type="checkbox" name="services" value="Événement / Activation"><span>Événement / Activation</span></label>
+            <label class="e1-service"><input type="checkbox" name="services" value="Je ne sais pas encore"><span>Je ne sais pas encore</span></label>
             <label class="e1-service"><input type="checkbox" name="services" value="Autre"><span>Autre</span></label>
           </div>
 
           <div id="e1-services-error">Sélectionnez au moins une option.</div>
+        </div>
+
+        <div class="e1-field e1-full">
+          <label for="e1-ingredients">Les bons ingrédients de votre marque <span class="e1-opt">— facultatif</span></label>
+          <textarea id="e1-ingredients" name="bons_ingredients" class="e1-textarea-sm" placeholder="Ce qui la rend unique : produits, histoire, communauté, codes…"></textarea>
         </div>
 
         <div class="e1-field e1-full">
