@@ -925,15 +925,34 @@
   }
 
   // La sonnette du footer : 3 coups → le formulaire s'ouvre
-  var footerBell = document.querySelector(".footer-bell");
-  var bellNote = document.querySelector(".footer-bell-note");
+  var footerBells = document.querySelectorAll(".footer-bell, .ft-bell");
+  var footerBell = footerBells[0];
+  var bellNotes = document.querySelectorAll(".footer-bell-note, .ft-bell-note");
+  var bellNote = {};
+  Object.defineProperty(bellNote, "textContent", {
+    set: function (t) { bellNotes.forEach(function (n) { n.textContent = t; }); }
+  });
   var bellReset = null;
+
+  function shakeBells() {
+    footerBells.forEach(function (b) {
+      b.classList.remove("is-ringing");
+      void b.offsetWidth;
+      b.classList.add("is-ringing");
+    });
+  }
+
+  // la cloche affichée (dans le titre sur desktop, à droite sur mobile)
+  function shownBell() {
+    for (var k = 0; k < footerBells.length; k++) {
+      if (footerBells[k].getClientRects().length) return footerBells[k];
+    }
+    return footerBell;
+  }
 
   function ringBell() {
     if (!footerBell || bellRings >= 3) return;
-    footerBell.classList.remove("is-ringing");
-    void footerBell.offsetWidth;
-    footerBell.classList.add("is-ringing");
+    shakeBells();
     ding();
     bellRings += 1;
     clearTimeout(bellReset);
@@ -960,13 +979,12 @@
   function startBell() {
     if (!footerBell) return;
     bellRings = 0;
-    footerBell.scrollIntoView({ block: "center", behavior: mqReduce.matches ? "auto" : "smooth" });
+    var bell = shownBell();
+    bell.scrollIntoView({ block: "center", behavior: mqReduce.matches ? "auto" : "smooth" });
     if (bellNote) bellNote.textContent = T.bellHint;
     setTimeout(function () {
-      footerBell.classList.remove("is-ringing");
-      void footerBell.offsetWidth;
-      footerBell.classList.add("is-ringing");
-      footerBell.focus({ preventScroll: true });
+      shakeBells();
+      (bell.closest("button") || bell).focus({ preventScroll: true });
     }, 700);
   }
 
@@ -1231,9 +1249,17 @@
       });
     };
 
+    // desktop : clic ou survol (petite intention pour ne pas tout ouvrir en passant)
+    // mobile : pas de clic, c'est le scroll qui fait avancer les étapes
+    var stepHover = null;
     steps.forEach(function (st, k) {
-      st.querySelector(".step-btn").addEventListener("click", function () { openStep(k); });
-      st.addEventListener("click", function () { openStep(k); });
+      st.addEventListener("click", function () { if (!mqMobile.matches) openStep(k); });
+      st.addEventListener("mouseenter", function () {
+        if (!canHover || mqMobile.matches) return;
+        clearTimeout(stepHover);
+        stepHover = setTimeout(function () { openStep(k); }, 140);
+      });
+      st.addEventListener("mouseleave", function () { clearTimeout(stepHover); });
     });
 
     // progression dans la carte figée (0 → 1) → étape 1 à 5
@@ -1248,8 +1274,76 @@
       }
     };
 
-    // plus de pilotage au scroll : on ouvre une étape au clic uniquement
     void methodScroll;
+
+    // Mobile : la méthode se fige, 1 geste de pouce = 1 étape.
+    // Des repères d'aimantation (scroll-snap) sont posés tous les « pas » ;
+    // l'aimantation n'est active que lorsque la méthode est à l'écran.
+    var pin = methodEl.querySelector(".method-pin");
+    var snaps = [];
+    var snapStep = 0;
+    var snapOn = false;
+    var root = document.documentElement;
+
+    var methodSnapLayout = function () {
+      snaps.forEach(function (m) { m.remove(); });
+      snaps = [];
+      var on = mqMobile.matches && !mqReduce.matches;
+      methodEl.classList.toggle("is-snap", on);
+      if (!on) {
+        methodEl.style.height = "";
+        pin.style.height = "";
+        root.classList.remove("method-snap");
+        snapOn = false;
+        return;
+      }
+      var vh = window.innerHeight;
+      snapStep = Math.round(vh * 0.55);
+      methodEl.dataset.step = snapStep;
+      pin.style.height = vh + "px";
+      methodEl.style.height = (vh + (steps.length - 1) * snapStep) + "px";
+      // entrée (au-dessus), une par étape, sortie (le footer en haut)
+      var marks = [-Math.round(vh * 0.6)];
+      for (var k = 0; k < steps.length; k++) marks.push(k * snapStep);
+      marks.push(vh + (steps.length - 1) * snapStep);
+      marks.forEach(function (y) {
+        var m = document.createElement("span");
+        m.className = "method-snap-mark";
+        m.setAttribute("aria-hidden", "true");
+        m.style.top = y + "px";
+        methodEl.appendChild(m);
+        snaps.push(m);
+      });
+      methodSnapScroll();
+    };
+
+    var methodSnapScroll = function () {
+      if (!methodEl.classList.contains("is-snap")) return;
+      var r = methodEl.getBoundingClientRect();
+      var vh = window.innerHeight;
+      var inView = r.top < vh * 0.5 && r.bottom > vh * 0.5;
+      if (inView !== snapOn) {
+        snapOn = inView;
+        root.classList.toggle("method-snap", inView);
+      }
+      var i = Math.max(0, Math.min(steps.length - 1, Math.round(-r.top / snapStep)));
+      if (i !== scrollStep) {
+        scrollStep = i;
+        openStep(i);
+      }
+    };
+
+    methodSnapLayout();
+    window.addEventListener("scroll", methodSnapScroll, { passive: true });
+    var snapResize = null;
+    var lastW = window.innerWidth;
+    window.addEventListener("resize", function () {
+      // la barre d'adresse mobile change la hauteur : on ne recalcule que si la largeur bouge
+      if (window.innerWidth === lastW && methodEl.classList.contains("is-snap")) return;
+      lastW = window.innerWidth;
+      clearTimeout(snapResize);
+      snapResize = setTimeout(methodSnapLayout, 150);
+    });
   }
 
 
@@ -1314,6 +1408,12 @@
     var body = chef.querySelector(".chef-body");
     body.innerHTML = "";
     if (crew) body.appendChild(crew.cloneNode(true));
+    fillQueue();
+
+    var fig = chef.querySelector(".chef-figure");
+    fig.classList.remove("is-swap");
+    void fig.offsetWidth;
+    fig.classList.add("is-swap");
 
     // Ingrédients : des mots, pas de notes
     chef.querySelector(".chef-stat-list").innerHTML = (mb.getAttribute("data-stats") || "").split("|").map(function (pair) {
@@ -1324,6 +1424,48 @@
 
     var face = mb.querySelector(".face");
     if (face) { blink(face); talk(face); }
+  }
+
+  // Les autres chefs « font la queue » derrière celui de la fiche (desktop) :
+  // plus petits, plus pâles ; les survoler les fait passer devant
+  var queueLock = 0;
+  function fillQueue() {
+    var visual = chef.querySelector(".chef-visual");
+    var queue = visual.querySelector(".chef-queue");
+    if (!queue) {
+      queue = document.createElement("div");
+      queue.className = "chef-queue";
+      visual.appendChild(queue);
+    }
+    queue.innerHTML = "";
+    queueLock = Date.now() + 900;
+    var crews = document.querySelectorAll(".crew-fig .crew-body");
+    for (var n = 1; n < members.length; n++) {
+      var k = (chefIndex + n) % members.length;
+      var q = document.createElement("button");
+      q.type = "button";
+      q.className = "chef-q chef-q-" + n;
+      q.setAttribute("aria-label", members[k].querySelector(".member-name").textContent);
+      var face = document.createElement("img");
+      face.className = "chef-q-face";
+      face.src = members[k].querySelector(".face img").getAttribute("src");
+      face.alt = "";
+      q.appendChild(face);
+      var qb = document.createElement("div");
+      qb.className = "chef-q-body";
+      if (crews[k]) qb.appendChild(crews[k].cloneNode(true));
+      q.appendChild(qb);
+      (function (k, q) {
+        var t = null;
+        q.addEventListener("mouseenter", function () {
+          clearTimeout(t);
+          t = setTimeout(function () { if (Date.now() > queueLock) fillChef(k); }, 160);
+        });
+        q.addEventListener("mouseleave", function () { clearTimeout(t); });
+        q.addEventListener("click", function () { fillChef(k); });
+      })(k, q);
+      queue.appendChild(q);
+    }
   }
 
   // Desktop (souris) : la fiche s'ouvre au survol d'un visage, par-dessus
@@ -1365,11 +1507,15 @@
     var photo = mb.querySelector(".member-photo");
     // petite intention de survol : passer sur un visage ne suffit pas à ouvrir sa fiche
     var hoverIntent = null;
-    photo.addEventListener("mouseenter", function () {
+    var armHover = function () {
       if (!hoverMode()) return;
+      if (chefIndex === i && chef.classList.contains("is-open")) return;
       clearTimeout(hoverIntent);
-      hoverIntent = setTimeout(function () { openChef(i); }, 220);
-    });
+      hoverIntent = setTimeout(function () { openChef(i); }, 480);
+    };
+    // la souris doit rester posée ~0,5 s : traverser un visage n'ouvre rien
+    photo.addEventListener("mouseenter", armHover);
+    photo.addEventListener("mousemove", armHover);
     photo.addEventListener("mouseleave", function () {
       clearTimeout(hoverIntent);
       if (hoverMode()) scheduleClose();

@@ -5529,3 +5529,233 @@ label,
 .toast {
   display: none !important;
 }
+
+
+
+/* =========================================================
+   V21 — sans numérotation · brigade en file · méthode au survol / au pouce
+   ========================================================= */
+
+/* 1. plus de numérotation des sections */
+#approche .sec-label::before,
+#expertises-list .sec-label::before,
+#brigade-grid .sec-label::before,
+#method-title::before {
+  content: none !important;
+  display: none !important;
+}
+
+/* 2. fiche chef (desktop) : les autres chefs font la queue derrière */
+.chef-queue {
+  display: none;
+}
+@media (min-width: 901px) {
+  .chef.is-peek .chef-visual {
+    position: relative;
+  }
+  .chef.is-peek .chef-figure {
+    position: relative;
+    z-index: 2;
+  }
+  .chef.is-peek .chef-queue {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .chef-q {
+    position: absolute;
+    bottom: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    pointer-events: auto;
+    transform-origin: 50% 100%;
+    transition: opacity var(--t-base) var(--ease), transform var(--t-base) var(--ease);
+  }
+  .chef-q-face {
+    display: block;
+    position: relative;
+    z-index: 2;
+    width: 62%;
+    height: auto;
+    margin: 0 auto;
+    mix-blend-mode: multiply;
+  }
+  .chef-q-body .crew-body {
+    margin-top: -49%;
+    transform: translateX(3.85%);
+  }
+  /* le premier de la file, juste derrière */
+  .chef-q-1 {
+    left: calc(50% + 40px);
+    width: min(40%, 200px);
+    opacity: .42;
+    transform: scale(.86);
+  }
+  /* le second, encore derrière */
+  .chef-q-2 {
+    left: calc(50% + 130px);
+    width: min(34%, 170px);
+    opacity: .24;
+    transform: scale(.78);
+    z-index: -1;
+  }
+  .chef-q:hover,
+  .chef-q:focus-visible {
+    opacity: .9;
+    transform: scale(.92);
+  }
+  /* l'arrivée devant la file */
+  .chef.is-peek .chef-figure.is-swap {
+    animation: e1-chef-swap 360ms var(--ease) both;
+  }
+  @keyframes e1-chef-swap {
+    from { opacity: .4; transform: translateX(46px) scale(.88); }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
+/* 3. fiche chef : les étapes où le profil intervient sont à 100 % (comme sur mobile) */
+.chef .chef-cycle li.is-current,
+.chef.is-peek .chef-cycle li.is-current {
+  opacity: 1;
+}
+
+/* 4. méthode (desktop) : le texte à gauche, la note à droite */
+@media (min-width: 901px) {
+  .method-intro {
+    grid-column: 1;
+  }
+  .method-intro-wrap .note-method {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: center;
+    justify-self: start;
+    margin: 0;
+  }
+  .step {
+    cursor: pointer;
+  }
+}
+
+/* 5. footer (desktop) : la sonnette remplace le point, le logo prend sa place */
+.ft-text {
+  display: inline;
+}
+.ft-last {
+  white-space: nowrap;
+}
+.ft-bell {
+  display: none;
+}
+.footer-logo {
+  display: none;
+}
+@media (min-width: 481px) {
+  .ft-dot {
+    display: none;
+  }
+  .ft-bell {
+    position: relative;
+    display: inline-block;
+    width: .78em;
+    margin-left: .1em;
+    vertical-align: baseline;
+    color: inherit;
+    line-height: 0;
+    transform-origin: 50% 90%;
+  }
+  .ft-bell svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .footer-title:hover .ft-bell,
+  .ft-bell.is-ringing {
+    animation: e1-ring 460ms ease-in-out;
+  }
+  .ft-bell-note {
+    position: absolute;
+    left: 70%;
+    bottom: calc(100% + .1em);
+    color: var(--fluo);
+    font-family: var(--font-hand);
+    font-size: clamp(20px, 1.8vw, 28px);
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1;
+    text-transform: none;
+    white-space: nowrap;
+    transform: translateX(-50%) rotate(-4deg);
+    pointer-events: none;
+  }
+  .footer-bell {
+    display: none;
+  }
+  /* la note d'origine reste pour les lecteurs d'écran */
+  .footer-bell-wrap .footer-bell-note {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+  }
+  .footer-logo {
+    display: block;
+    width: clamp(84px, 8.5vw, 150px);
+    height: auto;
+    transition: transform var(--t-base) var(--ease);
+  }
+  .footer-logo:hover {
+    transform: rotate(-6deg) scale(1.04);
+  }
+}
+
+/* 6. méthode (mobile) : figée, 1 geste de pouce = 1 étape */
+html.method-snap {
+  scroll-snap-type: y mandatory;
+}
+.method-snap-mark {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+@media (max-width: 480px) {
+  .js .method.is-snap {
+    position: relative;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+  .js .method.is-snap .method-pin {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    padding-top: clamp(28px, 7vh, 64px);
+    overflow: hidden;
+  }
+  .js .method.is-snap .method-head {
+    padding-top: 0;
+  }
+  .js .method.is-snap .step,
+  .js .method.is-snap .step-btn {
+    cursor: default;
+  }
+  .js .method.is-snap .step-body {
+    transition: none;
+  }
+}
+@media (max-width: 480px) and (max-height: 600px) {
+  /* petits écrans : la phrase d'intro s'efface pour que l'étape tienne en entier */
+  .js .method.is-snap .method-intro-wrap {
+    display: none;
+  }
+}
