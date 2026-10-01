@@ -5636,8 +5636,9 @@ label,
     justify-self: start;
     margin: 0;
   }
-  .step {
-    cursor: pointer;
+  .step,
+  .step-btn {
+    cursor: default;
   }
 }
 
@@ -5758,4 +5759,9 @@ html.method-snap {
   .js .method.is-snap .method-intro-wrap {
     display: none;
   }
+}
+
+/* méthode (desktop) : plus de soulignement « cliquable » au survol */
+.step:not(.is-active) .step-btn:hover .step-name {
+  text-decoration: none;
 }

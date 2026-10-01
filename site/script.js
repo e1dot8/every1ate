@@ -1249,11 +1249,15 @@
       });
     };
 
-    // desktop : clic ou survol (petite intention pour ne pas tout ouvrir en passant)
+    // desktop : survol uniquement (petite intention pour ne pas tout ouvrir en passant)
     // mobile : pas de clic, c'est le scroll qui fait avancer les étapes
     var stepHover = null;
     steps.forEach(function (st, k) {
-      st.addEventListener("click", function () { if (!mqMobile.matches) openStep(k); });
+      // pas de clic : au clavier seulement, le focus ouvre l'étape (accessibilité)
+      var btn = st.querySelector(".step-btn");
+      btn.addEventListener("focus", function () {
+        if (!mqMobile.matches && btn.matches(":focus-visible")) openStep(k);
+      });
       st.addEventListener("mouseenter", function () {
         if (!canHover || mqMobile.matches) return;
         clearTimeout(stepHover);
