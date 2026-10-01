@@ -5244,7 +5244,7 @@ html.egg-open .float-cta.is-visible {
     white-space: nowrap;
   }
   #method-title::before {
-    content: "( 05 )";
+    content: "( 04 )";
     margin-bottom: 1.6em;
     letter-spacing: .12em;
   }
@@ -5510,4 +5510,22 @@ label,
   .xp-one-cta {
     font-size: clamp(10.5px, .78vw, 13px);
   }
+}
+
+
+/* =========================================================
+   V20 — le fluo est réservé aux mots cliquables
+   ========================================================= */
+/* expertises : les mots importants soulignés au stylo (pas de fluo = pas de clic promis) */
+.xp-desc mark {
+  padding: 0;
+  background: none;
+  color: inherit;
+  text-decoration: underline 2px var(--pen);
+  text-decoration-skip-ink: none;
+  text-underline-offset: 3px;
+}
+/* plus de notification système */
+.toast {
+  display: none !important;
 }

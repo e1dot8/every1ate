@@ -667,8 +667,11 @@
   var toastTimer = null;
 
   // action (optionnelle) : { label, onClick } → petit bouton dans la notification
+  // Plus de notification système : les animations et les annotations au stylo
+  // suffisent. La fonction reste pour ne rien casser, mais n'affiche plus rien.
+  var TOASTS_ON = false;
   function toast(message, action, delay) {
-    if (!toastEl) return;
+    if (!TOASTS_ON || !toastEl) return;
     if (delay) { setTimeout(function () { toast(message, action); }, delay); return; }
     toastEl.textContent = message;
     toastEl.classList.toggle("has-action", !!action);
