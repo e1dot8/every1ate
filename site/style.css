@@ -5765,3 +5765,30 @@ html.method-snap {
 .step:not(.is-active) .step-btn:hover .step-name {
   text-decoration: none;
 }
+
+/* V21b — footer desktop : logo à la largeur de l'email, à la hauteur du titre */
+@media (min-width: 481px) {
+  .footer-bell-wrap {
+    align-self: stretch;
+    justify-content: flex-end;
+  }
+  .footer-logo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-fit: contain;
+    object-position: right bottom;
+  }
+  .footer-logo:hover {
+    transform: none;
+  }
+}
+/* V21b — méthode mobile : chaque étape se touche */
+@media (max-width: 480px) {
+  .js .method.is-snap .step,
+  .js .method.is-snap .step-btn {
+    cursor: pointer;
+  }
+}

@@ -1218,6 +1218,17 @@
     }
   });
 
+  // Footer (desktop) : le logo = largeur de l'email × hauteur de « Une idée ? Sonnez »
+  var footLogoWrap = document.querySelector(".footer-bell-wrap");
+  var footMail = document.getElementById("footer-email");
+  var fitFootLogo = function () {
+    if (!footLogoWrap || !footMail) return;
+    footLogoWrap.style.width = mqMobile.matches ? "" : footMail.offsetWidth + "px";
+  };
+  fitFootLogo();
+  window.addEventListener("resize", fitFootLogo);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitFootLogo);
+
   /* =======================================================
      MÉTHODE — une étape ouverte à la fois
      La carte se fige le temps de parcourir les 5 étapes :
@@ -1253,8 +1264,15 @@
     // mobile : pas de clic, c'est le scroll qui fait avancer les étapes
     var stepHover = null;
     steps.forEach(function (st, k) {
-      // pas de clic : au clavier seulement, le focus ouvre l'étape (accessibilité)
+      // desktop : pas de clic, au clavier le focus ouvre l'étape (accessibilité)
+      // mobile : un appui sur une étape fait défiler jusqu'à elle (même repère qu'au pouce)
       var btn = st.querySelector(".step-btn");
+      st.addEventListener("click", function () {
+        if (!mqMobile.matches) return;
+        if (!methodEl.classList.contains("is-snap")) { openStep(k); return; }
+        var y = window.pageYOffset + methodEl.getBoundingClientRect().top + k * snapStep;
+        window.scrollTo({ top: y, behavior: mqReduce.matches ? "auto" : "smooth" });
+      });
       btn.addEventListener("focus", function () {
         if (!mqMobile.matches && btn.matches(":focus-visible")) openStep(k);
       });
