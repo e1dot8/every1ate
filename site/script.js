@@ -34,6 +34,12 @@
       open: "La cuisine est ouverte", openShort: "Cuisine ouverte",
       rest: "La cuisine se repose, les commandes restent ouvertes", restShort: "Commandes ouvertes",
       bellHint: "sonnez 3 fois ↓",
+      close: "Fermer",
+      bowlKicker: "Mise en place", bowlTitle: "Les bons ingrédients",
+      bowlIntro: "Touchez ce que votre marque a déjà. On part de là.",
+      bowlEmpty: "Le saladier est vide", bowlOne: "ingrédient", bowlMany: "ingrédients",
+      bowlGo: "Passer en cuisine", bowlLead: "Nos bons ingrédients : ",
+      bowlItems: ["Des produits forts", "Une histoire à raconter", "Une communauté fidèle", "Des codes visuels forts", "Une culture autour d’elle", "Un vrai savoir-faire"],
     },
     en: {
       copied: "Copied", copy: "Copy", copiedToast: "Email copied. Talk soon.",
@@ -50,6 +56,12 @@
       open: "The kitchen is open", openShort: "Kitchen open",
       rest: "The kitchen is resting, orders stay open", restShort: "Orders open",
       bellHint: "ring 3 times ↓",
+      close: "Close",
+      bowlKicker: "Mise en place", bowlTitle: "The right ingredients",
+      bowlIntro: "Tap what your brand already has. We start from there.",
+      bowlEmpty: "The bowl is empty", bowlOne: "ingredient", bowlMany: "ingredients",
+      bowlGo: "To the kitchen", bowlLead: "Our right ingredients: ",
+      bowlItems: ["Strong products", "A story to tell", "A loyal community", "Strong visual codes", "A culture around it", "Real craftsmanship"],
     }
   }[LANG];
 
@@ -139,6 +151,7 @@
   var topBar = hero && hero.querySelector(".hero-top");
   var statement = hero && hero.querySelector(".hero-say");
   var cta = hero && hero.querySelector(".hero-cta");
+  var veil = hero && hero.querySelector(".hero-veil");
 
   var mqMobile = window.matchMedia("(max-width: 480px)");
   var mqReduce = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -172,7 +185,7 @@
   }
 
   function clearInline() {
-    [icon, typo, bar, topBar, statement, cta].forEach(function (el) {
+    [icon, typo, bar, topBar, statement, cta, veil].forEach(function (el) {
       if (el) {
         el.style.transform = "";
         el.style.opacity = "";
@@ -233,6 +246,8 @@
     topBar.style.opacity = (1 - clamp(a * 2)).toFixed(3);
 
     statement.style.opacity = clamp((b - 0.15) * 1.6).toFixed(3);
+    // la vidéo s'efface derrière un fond noir : le statement se lit bien
+    if (veil) veil.style.opacity = clamp(b * 1.3).toFixed(3);
     statement.style.transform = "translateY(calc(-50% + " + ((1 - b) * m.stageH * 0.42).toFixed(2) + "px))";
 
   }
@@ -1145,6 +1160,38 @@
     if (link) link.click();
   }
 
+  // Glisser pour fermer (mobile) : le panneau suit le doigt, au-delà d'un seuil il se ferme
+  function swipeToClose(el, dir, onClose) {
+    if (!el) return;
+    var x0 = null, y0 = null, axis = null, d = 0;
+    el.addEventListener("touchstart", function (e) {
+      if (!mqMobile.matches) return;
+      x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; axis = null; d = 0;
+    }, { passive: true });
+    el.addEventListener("touchmove", function (e) {
+      if (x0 === null) return;
+      var dx = e.touches[0].clientX - x0, dy = e.touches[0].clientY - y0;
+      if (!axis && (Math.abs(dx) > 10 || Math.abs(dy) > 10)) {
+        axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+        // vers le bas : seulement si le panneau est déjà en haut de son contenu
+        if (dir === "down" && (axis !== "y" || dy < 0 || el.scrollTop > 0)) axis = "none";
+        if (dir === "right" && (axis !== "x" || dx < 0)) axis = "none";
+        if (axis !== "none") el.classList.add("is-dragging");
+      }
+      if (axis === "none" || !axis) return;
+      d = Math.max(0, dir === "right" ? dx : dy);
+      el.style.transform = dir === "right" ? "translateX(" + d + "px)" : "translateY(" + d + "px)";
+    }, { passive: true });
+    el.addEventListener("touchend", function () {
+      if (x0 === null) return;
+      var go = axis && axis !== "none" && d > 90;
+      el.classList.remove("is-dragging");
+      el.style.transform = "";
+      x0 = null;
+      if (go) onClose();
+    });
+  }
+
   var onKey = function (fn) {
     return function (event) {
       if (event.type === "keydown" && event.key !== "Enter" && event.key !== " ") return;
@@ -1152,21 +1199,142 @@
       fn();
     };
   };
-  // « les bons ingrédients » : on ouvre le formulaire sur le champ dédié
-  // (le saladier est gardé de côté pour plus tard : openBowl() n'est plus appelé)
-  document.querySelectorAll("[data-ingredients]").forEach(function (el) {
-    var go = onKey(function () {
-      openFormNow();
-      setTimeout(function () {
-        var field = document.getElementById("e1-ingredients");
-        if (!field) return;
-        field.scrollIntoView({ block: "center", behavior: mqReduce.matches ? "auto" : "smooth" });
-        field.focus({ preventScroll: true });
-        var box = field.closest(".e1-field");
-        box.classList.add("is-highlight");
-        setTimeout(function () { box.classList.remove("is-highlight"); }, 2400);
-      }, 480);
+  /* --- « les bons ingrédients » → le saladier ---
+     Une seule étape : on touche ce que la marque a déjà, ça tombe dans le
+     saladier, puis « Passer en cuisine » ouvre le formulaire avec le champ
+     « bons ingrédients » déjà rempli. */
+  var bowl = null;
+  var picked = [];
+  var BOWL_SVG = '<svg class="bowl-svg" viewBox="0 0 220 112" aria-hidden="true" focusable="false"><path d="M8 22h204c-4 52-44 84-102 84S12 74 8 22Z" fill="#fff" stroke="#000" stroke-width="3"/><ellipse cx="110" cy="22" rx="102" ry="11" fill="#fff" stroke="#000" stroke-width="3"/></svg>';
+
+  function buildBowl() {
+    bowl = document.createElement("div");
+    bowl.className = "bowl";
+    bowl.setAttribute("role", "dialog");
+    bowl.setAttribute("aria-modal", "true");
+    bowl.setAttribute("aria-labelledby", "bowl-title");
+    bowl.setAttribute("aria-hidden", "true");
+    bowl.innerHTML =
+      '<div class="bowl-backdrop"></div>' +
+      '<div class="bowl-panel">' +
+        '<div class="bowl-top"><p class="bowl-kicker">' + T.bowlKicker + '</p><button type="button" class="bowl-close">' + T.close.toUpperCase() + ' ×</button></div>' +
+        '<h2 id="bowl-title" class="bowl-title">' + T.bowlTitle + '</h2>' +
+        '<p class="bowl-intro">' + T.bowlIntro + '</p>' +
+        '<div class="bowl-chips">' + T.bowlItems.map(function (t, k) {
+          return '<button type="button" class="bowl-chip" data-k="' + k + '" aria-pressed="false">' + t + '</button>';
+        }).join("") + '</div>' +
+        '<div class="bowl-drop"><ul class="bowl-in" aria-live="polite"></ul>' + BOWL_SVG + '</div>' +
+        '<p class="bowl-count"></p>' +
+        '<button type="button" class="bowl-go" disabled>' + T.bowlGo +
+          '<svg class="i-arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M4 12L12 4M5.5 4H12v6.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square"/></svg></button>' +
+      '</div>';
+    document.body.appendChild(bowl);
+
+    bowl.querySelector(".bowl-close").addEventListener("click", closeBowl);
+    bowl.querySelector(".bowl-backdrop").addEventListener("click", closeBowl);
+    bowl.querySelector(".bowl-go").addEventListener("click", serveBowl);
+    bowl.querySelectorAll(".bowl-chip").forEach(function (chip) {
+      chip.addEventListener("click", function () { toggleIngredient(+chip.getAttribute("data-k"), chip); });
     });
+    bowl.querySelector(".bowl-in").addEventListener("click", function (event) {
+      var bit = event.target.closest(".bowl-bit");
+      if (bit) toggleIngredient(+bit.getAttribute("data-k"));
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && bowl.classList.contains("is-open")) closeBowl();
+    });
+    swipeToClose(bowl.querySelector(".bowl-panel"), "down", closeBowl);
+  }
+
+  function renderBowl(dropped) {
+    bowl.querySelectorAll(".bowl-chip").forEach(function (chip) {
+      var on = picked.indexOf(+chip.getAttribute("data-k")) !== -1;
+      chip.classList.toggle("is-in", on);
+      chip.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    bowl.querySelector(".bowl-in").innerHTML = picked.map(function (k, n) {
+      var tilt = [-6, 4, -2, 7, -5, 3][n % 6];
+      return '<li style="--tilt:' + tilt + 'deg"' + (k === dropped ? ' class="is-new"' : '') + '><button type="button" class="bowl-bit" data-k="' + k + '">' + T.bowlItems[k] + ' <span aria-hidden="true">×</span></button></li>';
+    }).join("");
+    var n = picked.length;
+    bowl.querySelector(".bowl-count").textContent = n ? n + " " + (n > 1 ? T.bowlMany : T.bowlOne) : T.bowlEmpty;
+    bowl.querySelector(".bowl-go").disabled = !n;
+  }
+
+  function toggleIngredient(k, chip) {
+    var at = picked.indexOf(k);
+    if (at !== -1) { picked.splice(at, 1); renderBowl(); return; }
+    picked.push(k);
+    // l'ingrédient vole jusqu'au saladier
+    if (chip && !mqReduce.matches) {
+      var from = chip.getBoundingClientRect();
+      var to = bowl.querySelector(".bowl-svg").getBoundingClientRect();
+      var ghost = chip.cloneNode(true);
+      ghost.className = "bowl-chip bowl-ghost";
+      ghost.style.left = from.left + "px";
+      ghost.style.top = from.top + "px";
+      ghost.style.width = from.width + "px";
+      document.body.appendChild(ghost);
+      var dx = to.left + to.width / 2 - (from.left + from.width / 2);
+      var dy = to.top + to.height * 0.25 - (from.top + from.height / 2);
+      requestAnimationFrame(function () {
+        ghost.style.transform = "translate(" + dx + "px," + dy + "px) scale(.6) rotate(12deg)";
+        ghost.style.opacity = "0";
+      });
+      setTimeout(function () { ghost.remove(); }, 460);
+      setTimeout(function () { renderBowl(k); }, 300);
+      renderChips();
+      return;
+    }
+    renderBowl(k);
+  }
+
+  // l'état des boutons change tout de suite, le saladier se remplit à l'arrivée
+  function renderChips() {
+    bowl.querySelectorAll(".bowl-chip").forEach(function (chip) {
+      var on = picked.indexOf(+chip.getAttribute("data-k")) !== -1;
+      chip.classList.toggle("is-in", on);
+      chip.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+  }
+
+  function openBowl() {
+    if (!bowl) buildBowl();
+    renderBowl();
+    bowl.classList.add("is-open");
+    bowl.setAttribute("aria-hidden", "false");
+    document.body.classList.add("bowl-open");
+    setTimeout(function () { var c = bowl.querySelector(".bowl-chip"); if (c && !mqMobile.matches) c.focus({ preventScroll: true }); }, 60);
+  }
+
+  function closeBowl() {
+    if (!bowl || !bowl.classList.contains("is-open")) return;
+    bowl.classList.remove("is-open");
+    bowl.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("bowl-open");
+  }
+
+  function serveBowl() {
+    if (!picked.length) return;
+    var text = T.bowlLead + picked.map(function (k) {
+      var t = T.bowlItems[k];
+      return t.charAt(0).toLowerCase() + t.slice(1);
+    }).join(", ") + ".";
+    closeBowl();
+    openFormNow();
+    setTimeout(function () {
+      var field = document.getElementById("e1-ingredients");
+      if (!field) return;
+      field.value = text;
+      field.scrollIntoView({ block: "center", behavior: mqReduce.matches ? "auto" : "smooth" });
+      var box = field.closest(".e1-field");
+      box.classList.add("is-highlight");
+      setTimeout(function () { box.classList.remove("is-highlight"); }, 2400);
+    }, 480);
+  }
+
+  document.querySelectorAll("[data-ingredients]").forEach(function (el) {
+    var go = onKey(openBowl);
     el.addEventListener("click", go);
     el.addEventListener("keydown", go);
   });
@@ -1390,7 +1558,10 @@
   var chefIndex = -1;
 
   function fillChef(i) {
+    var prevIndex = chefIndex;
     chefIndex = (i + members.length) % members.length;
+    // de quel côté arrive le chef : de droite (suivant) ou de gauche (précédent)
+    var fromSide = prevIndex === -1 ? 0 : (chefIndex === (prevIndex + 1) % members.length ? 1 : -1);
     var mb = members[chefIndex];
     var insta = mb.querySelector(".member-insta");
 
@@ -1433,6 +1604,7 @@
     fillQueue();
 
     var fig = chef.querySelector(".chef-figure");
+    fig.style.setProperty("--from", (fromSide * 60) + "px");
     fig.classList.remove("is-swap");
     void fig.offsetWidth;
     fig.classList.add("is-swap");
@@ -1789,6 +1961,9 @@
   document.querySelectorAll("[data-open-form]").forEach(function (el) {
     el.addEventListener("click", openForm);
   });
+
+  // Mobile : glisser le formulaire vers la droite le referme (il est arrivé par là)
+  swipeToClose(panel, "right", closeForm);
 
   // Lien direct vers le formulaire : …/#contact
   if (window.location.hash === "#contact") {

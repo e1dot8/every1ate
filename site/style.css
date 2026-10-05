@@ -5792,3 +5792,331 @@ html.method-snap {
     cursor: pointer;
   }
 }
+
+
+
+/* =========================================================
+   V22 — saladier simplifié · fiche chef au centre · hero mobile sur noir · formulaire mobile
+   ========================================================= */
+
+/* --- hero mobile : un fond noir passe sur la vidéo pendant la transition --- */
+.hero-veil {
+  display: none;
+}
+@media (max-width: 480px) {
+  .hero-veil {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+/* --- fiche chef (desktop) : le chef au centre, la file de chaque côté --- */
+@media (min-width: 901px) {
+  .chef-q-1,
+  .chef-q-2 {
+    width: min(30%, 160px);
+    opacity: .36;
+    transform: scale(.82);
+    z-index: 1;
+  }
+  .chef-q-1 {
+    left: calc(50% + 70px);
+    right: auto;
+  }
+  .chef-q-2 {
+    left: auto;
+    right: calc(50% + 70px);
+  }
+  .chef-q:hover,
+  .chef-q:focus-visible {
+    opacity: .9;
+    transform: scale(.88);
+  }
+  @keyframes e1-chef-swap {
+    from { opacity: .4; transform: translateX(var(--from, 0px)) scale(.86); }
+    to   { opacity: 1; transform: none; }
+  }
+}
+
+/* --- le saladier : les bons ingrédients --- */
+.bowl {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  visibility: hidden;
+  pointer-events: none;
+}
+.bowl.is-open {
+  visibility: visible;
+  pointer-events: auto;
+}
+.bowl-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .35);
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+.bowl.is-open .bowl-backdrop {
+  opacity: 1;
+}
+.bowl-panel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(92vw, 640px);
+  max-height: 92vh;
+  max-height: 92dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 22px clamp(20px, 3vw, 36px) 28px;
+  background: var(--paper-color) var(--paper);
+  color: var(--black);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, .45);
+  opacity: 0;
+  transform: translate(-50%, -46%);
+  transition: opacity 240ms ease, transform 320ms var(--ease);
+}
+.bowl.is-open .bowl-panel {
+  opacity: 1;
+  transform: translate(-50%, -50%);
+}
+body.bowl-open {
+  overflow: hidden;
+}
+.bowl-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.bowl-kicker {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.bowl-close {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-family: var(--font-title);
+  font-size: 14px;
+  cursor: pointer;
+}
+.bowl-title {
+  margin: 0 0 8px;
+  font-family: var(--font-title);
+  font-size: clamp(36px, 4vw, 56px);
+  font-weight: 700;
+  line-height: .9;
+  letter-spacing: -.03em;
+  text-transform: uppercase;
+}
+.bowl-intro {
+  margin: 0 0 18px;
+  font-family: var(--font-text);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.bowl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bowl-chip {
+  padding: 9px 12px 8px;
+  border: 1px solid var(--black);
+  background: transparent;
+  color: var(--black);
+  font-family: var(--font-title);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--t-fast) ease, color var(--t-fast) ease, opacity var(--t-fast) ease;
+}
+.bowl-chip:hover {
+  background: var(--black);
+  color: var(--white);
+}
+.bowl-chip.is-in {
+  opacity: .35;
+  text-decoration: line-through;
+  background: transparent;
+  color: var(--black);
+}
+.bowl-ghost {
+  position: fixed;
+  z-index: 1002;
+  margin: 0;
+  background: var(--black);
+  color: var(--white);
+  pointer-events: none;
+  transition: transform 420ms cubic-bezier(.5, -.2, .6, 1), opacity 420ms ease;
+}
+.bowl-drop {
+  position: relative;
+  width: min(100%, 360px);
+  margin: 26px auto 0;
+  padding-top: 8px;
+}
+.bowl-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.bowl-in {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 6px;
+  min-height: 34px;
+  margin: 0 8% -14px;
+  padding: 0;
+  list-style: none;
+}
+.bowl-in li {
+  transform: rotate(var(--tilt, 0deg));
+}
+.bowl-in li.is-new {
+  animation: e1-bowl-drop 420ms cubic-bezier(.3, 1.4, .5, 1) both;
+}
+@keyframes e1-bowl-drop {
+  from { transform: translateY(-26px) rotate(var(--tilt, 0deg)); opacity: 0; }
+  to   { transform: rotate(var(--tilt, 0deg)); opacity: 1; }
+}
+.bowl-bit {
+  padding: 5px 8px 4px;
+  border: 0;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-text);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.bowl-count {
+  margin: 10px 0 18px;
+  font-family: var(--font-hand);
+  font-size: 22px;
+  color: var(--pen);
+  text-align: center;
+}
+.bowl-go {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px 13px;
+  border: 1px solid var(--black);
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-title);
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.bowl-go .i-arrow {
+  width: .9em;
+  height: .9em;
+}
+.bowl-go:disabled {
+  background: transparent;
+  color: var(--black);
+  opacity: .3;
+  cursor: default;
+}
+@media (max-width: 480px) {
+  /* mobile : le saladier monte du bas de l'écran */
+  .bowl-panel {
+    top: auto;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    max-height: 90dvh;
+    padding: 18px var(--gutter) calc(22px + env(safe-area-inset-bottom));
+    transform: translateY(100%);
+    opacity: 1;
+  }
+  .bowl.is-open .bowl-panel {
+    transform: none;
+  }
+  .bowl-panel::before {
+    content: "";
+    display: block;
+    width: 44px;
+    height: 4px;
+    margin: -4px auto 12px;
+    background: rgba(0, 0, 0, .25);
+  }
+  .bowl-title {
+    font-size: 36px;
+  }
+}
+.bowl-panel.is-dragging,
+.e1-project-panel.is-dragging {
+  transition: none !important;
+}
+
+/* --- formulaire mobile : « Fermer » reste visible en haut, glisser à droite ferme --- */
+@media (max-width: 480px) {
+  .e1-form-top {
+    position: sticky;
+    top: -18px;
+    z-index: 3;
+    margin: -18px calc(-1 * var(--gutter)) 14px;
+    padding: 14px var(--gutter) 12px;
+    background: var(--paper-color) var(--paper);
+    border-bottom: 1px solid rgba(0, 0, 0, .12);
+  }
+  .e1-form-close {
+    padding: 6px 0 6px 12px;
+  }
+}
+@media (max-width: 480px) {
+  /* saladier mobile : tout tient à l'écran, le bouton reste au pouce */
+  .bowl-title {
+    font-size: 30px;
+  }
+  .bowl-intro {
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+  .bowl-chips {
+    gap: 6px;
+  }
+  .bowl-chip {
+    padding: 8px 9px 7px;
+    font-size: 11px;
+  }
+  .bowl-drop {
+    width: 210px;
+    margin-top: 18px;
+  }
+  .bowl-in {
+    margin: 0 -40px -10px;
+  }
+  .bowl-bit {
+    font-size: 10px;
+  }
+  .bowl-count {
+    margin: 6px 0 12px;
+    font-size: 19px;
+  }
+  .bowl-go {
+    position: sticky;
+    bottom: 0;
+  }
+}
